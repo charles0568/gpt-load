@@ -582,13 +582,13 @@ function resetPage() {
           <template #icon>
             <n-icon :component="AddCircleOutline" />
           </template>
-          添加密钥
+          新增密鑰
         </n-button>
         <n-button type="error" size="small" @click="deleteDialogShow = true">
           <template #icon>
             <n-icon :component="RemoveCircleOutline" />
           </template>
-          删除密钥
+          刪除密鑰
         </n-button>
       </div>
       <div class="toolbar-right">
@@ -602,7 +602,7 @@ function resetPage() {
           <n-input-group>
             <n-input
               v-model:value="searchText"
-              placeholder="Key 模糊查询"
+              placeholder="Key 模糊查詢"
               size="small"
               style="width: 180px"
               clearable

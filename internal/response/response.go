@@ -25,7 +25,7 @@ type ErrorResponse struct {
 func Success(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, SuccessResponse{
 		Code:    0,
-		Message: "Success",
+		Message: "成功",
 		Data:    data,
 	})
 }

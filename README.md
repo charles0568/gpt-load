@@ -1,49 +1,49 @@
 # GPT-Load
 
-中文文档 | [English](README_EN.md)
+繁體中文文檔 | [English](README_EN.md)
 
 [![Release](https://img.shields.io/github/v/release/tbphp/gpt-load)](https://github.com/tbphp/gpt-load/releases)
 ![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-一个高性能、企业级的 AI 接口透明代理服务，专门为需要集成多种 AI 服务的企业和开发者设计。采用 Go 语言开发，具备智能密钥管理、负载均衡和完善的监控功能，专为高并发生产环境而设计。
+一個高效能、企業級的 AI 介面透明代理服務，專門為需要整合多種 AI 服務的企業和開發者設計。採用 Go 語言開發，具備智慧密鑰管理、負載平衡和完善的監控功能，專為高併發生產環境而設計。
 
-详细请查看[官方文档](https://www.gpt-load.com/docs)
+詳細請查看[官方文檔](https://www.gpt-load.com/docs)
 
 <a href="https://hellogithub.com/repository/tbphp/gpt-load" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=554dc4c46eb14092b9b0c56f1eb9021c&claim_uid=Qlh8vzrWJ0HCneG" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
 ## 功能特性
 
-- **透明代理**: 完全保留原生 API 格式，支持 OpenAI、Google Gemini 和 Anthropic Claude 等多种格式
-- **智能密钥管理**: 高性能密钥池，支持分组管理、自动轮换和故障恢复
-- **负载均衡**: 支持多上游端点的加权负载均衡，提升服务可用性
-- **智能故障处理**: 自动密钥黑名单管理和恢复机制，确保服务连续性
-- **动态配置**: 系统设置和分组配置支持热重载，无需重启即可生效
-- **企业级架构**: 分布式主从部署，支持水平扩展和高可用
-- **现代化管理**: 基于 Vue 3 的 Web 管理界面，直观易用
-- **全面监控**: 实时统计、健康检查、详细请求日志
-- **高性能设计**: 零拷贝流式传输、连接池复用、原子操作
-- **生产就绪**: 优雅关闭、错误恢复、完善的安全机制
-- **双重认证体系**: 管理端与代理端认证分离，代理认证支持全局和分组级别密钥
+- **透明代理**: 完全保留原生 API 格式，支援 OpenAI、Google Gemini 和 Anthropic Claude 等多種格式
+- **智慧密鑰管理**: 高效能密鑰池，支援分組管理、自動輪換和故障恢復
+- **負載平衡**: 支援多上游端點的加權負載平衡，提升服務可用性
+- **智慧故障處理**: 自動密鑰黑名單管理和恢復機制，確保服務連續性
+- **動態配置**: 系統設定和分組配置支援熱重載，無需重啟即可生效
+- **企業級架構**: 分散式主從部署，支援水平擴展和高可用
+- **現代化管理**: 基於 Vue 3 的 Web 管理介面，直觀易用
+- **全面監控**: 即時統計、健康檢查、詳細請求日誌
+- **高效能設計**: 零拷貝串流傳輸、連線池複用、原子操作
+- **生產就緒**: 優雅關閉、錯誤恢復、完善的安全機制
+- **雙重認證體系**: 管理端與代理端認證分離，代理認證支援全域和分組級別密鑰
 
-## 支持的 AI 服务
+## 支援的 AI 服務
 
-GPT-Load 作为透明代理服务，完整保留各 AI 服务商的原生 API 格式：
+GPT-Load 作為透明代理服務，完整保留各 AI 服務商的原生 API 格式：
 
-- **OpenAI 格式**: 官方 OpenAI API、Azure OpenAI、以及其他 OpenAI 兼容服务
+- **OpenAI 格式**: 官方 OpenAI API、Azure OpenAI、以及其他 OpenAI 相容服務
 - **Google Gemini 格式**: Gemini Pro、Gemini Pro Vision 等模型的原生 API
-- **Anthropic Claude 格式**: Claude 系列模型，支持高质量的对话和文本生成
+- **Anthropic Claude 格式**: Claude 系列模型，支援高品質的對話和文字生成
 
-## 快速开始
+## 快速開始
 
-### 环境要求
+### 環境要求
 
-- Go 1.23+ (源码构建)
+- Go 1.23+ (原始碼建置)
 - Docker (容器化部署)
-- MySQL, PostgreSQL, 或 SQLite (数据库存储)
-- Redis (缓存和分布式协调，可选)
+- MySQL, PostgreSQL, 或 SQLite (資料庫儲存)
+- Redis (快取和分散式協調，可選)
 
-### 方式一：Docker 快速开始
+### 方式一：Docker 快速開始
 
 ```bash
 docker run -d --name gpt-load \
@@ -53,163 +53,163 @@ docker run -d --name gpt-load \
     ghcr.io/tbphp/gpt-load:latest
 ```
 
-> 使用 `sk-123456` 登录管理界面：<http://localhost:3001>
+> 使用 `sk-123456` 登入管理介面：<http://localhost:3001>
 
-### 方式二：使用 Docker Compose（推荐）
+### 方式二：使用 Docker Compose（推薦）
 
-**安装命令：**
+**安裝指令：**
 
 ```bash
-# 创建目录
+# 建立目錄
 mkdir -p gpt-load && cd gpt-load
 
-# 下载配置文件
+# 下載配置檔案
 wget https://raw.githubusercontent.com/tbphp/gpt-load/refs/heads/main/docker-compose.yml
 wget -O .env https://raw.githubusercontent.com/tbphp/gpt-load/refs/heads/main/.env.example
 
-# 启动服务
+# 啟動服務
 docker compose up -d
 ```
 
-默认安装的是 SQLite 版本，适合轻量单机应用。
+預設安裝的是 SQLite 版本，適合輕量單機應用。
 
-如需安装 MySQL, PostgreSQL 及 Redis，请在 `docker-compose.yml` 文件中取消所需服务的注释，并配置好对应的环境配置重启即可。
+如需安裝 MySQL, PostgreSQL 及 Redis，請在 `docker-compose.yml` 檔案中取消所需服務的註解，並配置好對應的環境配置重啟即可。
 
-**其他命令：**
+**其他指令：**
 
 ```bash
-# 查看服务状态
+# 查看服務狀態
 docker compose ps
 
-# 查看日志
+# 查看日誌
 docker compose logs -f
 
-# 重启服务
+# 重啟服務
 docker compose down && docker compose up -d
 
 # 更新到最新版本
 docker compose pull && docker compose down && docker compose up -d
 ```
 
-部署完成后：
+部署完成後：
 
-- 访问 Web 管理界面：<http://localhost:3001>
-- API 代理地址：<http://localhost:3001/proxy>
+- 存取 Web 管理介面：<http://localhost:3001>
+- API 代理位址：<http://localhost:3001/proxy>
 
-> 使用默认的认证 Key `sk-123456` 登录管理端，认证 Key 可以在 .env 中修改 AUTH_KEY。
+> 使用預設的認證 Key `sk-123456` 登入管理端，認證 Key 可以在 .env 中修改 AUTH_KEY。
 
-### 方式三：源码构建
+### 方式三：原始碼建置
 
-源码构建需要本地已安装数据库（SQLite、MySQL 或 PostgreSQL）和 Redis（可选）。
+原始碼建置需要本地已安裝資料庫（SQLite、MySQL 或 PostgreSQL）和 Redis（可選）。
 
 ```bash
-# 克隆并构建
+# 複製並建置
 git clone https://github.com/tbphp/gpt-load.git
 cd gpt-load
 go mod tidy
 
-# 创建配置
+# 建立配置
 cp .env.example .env
 
 # 修改 .env 中 DATABASE_DSN 和 REDIS_DSN 配置
-# REDIS_DSN 为可选，如果不配置则启用内存存储
+# REDIS_DSN 為可選，如果不配置則啟用記憶體儲存
 
-# 运行
+# 執行
 make run
 ```
 
-部署完成后：
+部署完成後：
 
-- 访问 Web 管理界面：<http://localhost:3001>
-- API 代理地址：<http://localhost:3001/proxy>
+- 存取 Web 管理介面：<http://localhost:3001>
+- API 代理位址：<http://localhost:3001/proxy>
 
-> 使用默认的认证 Key `sk-123456` 登录管理端，认证 Key 可以在 .env 中修改 AUTH_KEY。
+> 使用預設的認證 Key `sk-123456` 登入管理端，認證 Key 可以在 .env 中修改 AUTH_KEY。
 
-### 方式四：集群部署
+### 方式四：叢集部署
 
-集群部署需要所有节点都连接同一个 MySQL（或者 PostgreSQL） 和 Redis，并且 Redis 是必须要求。建议使用统一的分布式 MySQL 和 Redis 集群。
+叢集部署需要所有節點都連接同一個 MySQL（或者 PostgreSQL） 和 Redis，並且 Redis 是必須要求。建議使用統一的分散式 MySQL 和 Redis 叢集。
 
 **部署要求：**
 
-- 所有节点必须配置相同的 `AUTH_KEY`、`DATABASE_DSN`、`REDIS_DSN`
-- 一主多从架构，从节点必须配置环境变量：`IS_SLAVE=true`
+- 所有節點必須配置相同的 `AUTH_KEY`、`DATABASE_DSN`、`REDIS_DSN`
+- 一主多從架構，從節點必須配置環境變數：`IS_SLAVE=true`
 
-详细请参考[集群部署文档](https://www.gpt-load.com/docs/cluster)
+詳細請參考[叢集部署文檔](https://www.gpt-load.com/docs/cluster)
 
-## 配置系统
+## 配置系統
 
-### 配置架构概述
+### 配置架構概述
 
-GPT-Load 采用双层配置架构：
+GPT-Load 採用雙層配置架構：
 
-#### 1. 静态配置（环境变量）
+#### 1. 靜態配置（環境變數）
 
-- **特点**：应用启动时读取，运行期间不可修改，需重启应用生效
-- **用途**：基础设施配置，如数据库连接、服务器端口、认证密钥等
-- **管理方式**：通过 `.env` 文件或系统环境变量设置
+- **特點**：應用啟動時讀取，執行期間不可修改，需重啟應用生效
+- **用途**：基礎設施配置，如資料庫連線、伺服器埠、認證密鑰等
+- **管理方式**：透過 `.env` 檔案或系統環境變數設定
 
-#### 2. 动态配置（热重载）
+#### 2. 動態配置（熱重載）
 
-- **系统设置**：存储在数据库中，为整个应用提供统一的行为基准
-- **分组配置**：为特定分组定制的行为参数，可覆盖系统设置
-- **配置优先级**：分组配置 > 系统设置 > 环境配置
-- **特点**：支持热重载，修改后立即生效，无需重启应用
+- **系統設定**：儲存在資料庫中，為整個應用提供統一的行為基準
+- **分組配置**：為特定分組定製的行為參數，可覆蓋系統設定
+- **配置優先順序**：分組配置 > 系統設定 > 環境配置
+- **特點**：支援熱重載，修改後立即生效，無需重啟應用
 
 <details>
-<summary>静态配置（环境变量）</summary>
+<summary>靜態配置（環境變數）</summary>
 
-**服务器配置：**
+**伺服器配置：**
 
-| 配置项       | 环境变量                           | 默认值          | 说明                       |
+| 配置項       | 環境變數                           | 預設值          | 說明                       |
 | ------------ | ---------------------------------- | --------------- | -------------------------- |
-| 服务端口     | `PORT`                             | 3001            | HTTP 服务器监听端口        |
-| 服务地址     | `HOST`                             | 0.0.0.0         | HTTP 服务器绑定地址        |
-| 读取超时     | `SERVER_READ_TIMEOUT`              | 60              | HTTP 服务器读取超时（秒）  |
-| 写入超时     | `SERVER_WRITE_TIMEOUT`             | 600             | HTTP 服务器写入超时（秒）  |
-| 空闲超时     | `SERVER_IDLE_TIMEOUT`              | 120             | HTTP 连接空闲超时（秒）    |
-| 优雅关闭超时 | `SERVER_GRACEFUL_SHUTDOWN_TIMEOUT` | 10              | 服务优雅关闭等待时间（秒） |
-| 从节点模式   | `IS_SLAVE`                         | false           | 集群部署时从节点标识       |
-| 时区         | `TZ`                               | `Asia/Shanghai` | 指定时区                   |
+| 服務埠       | `PORT`                             | 3001            | HTTP 伺服器監聽埠          |
+| 服務位址     | `HOST`                             | 0.0.0.0         | HTTP 伺服器綁定位址        |
+| 讀取逾時     | `SERVER_READ_TIMEOUT`              | 60              | HTTP 伺服器讀取逾時（秒）  |
+| 寫入逾時     | `SERVER_WRITE_TIMEOUT`             | 600             | HTTP 伺服器寫入逾時（秒）  |
+| 閒置逾時     | `SERVER_IDLE_TIMEOUT`              | 120             | HTTP 連線閒置逾時（秒）    |
+| 優雅關閉逾時 | `SERVER_GRACEFUL_SHUTDOWN_TIMEOUT` | 10              | 服務優雅關閉等待時間（秒） |
+| 從節點模式   | `IS_SLAVE`                         | false           | 叢集部署時從節點標識       |
+| 時區         | `TZ`                               | `Asia/Shanghai` | 指定時區                   |
 
-**认证与数据库配置：**
+**認證與資料庫配置：**
 
-| 配置项     | 环境变量       | 默认值             | 说明                                 |
-| ---------- | -------------- | ------------------ | ------------------------------------ |
-| 管理密钥   | `AUTH_KEY`     | `sk-123456`        | **管理端**的访问认证密钥             |
-| 数据库连接 | `DATABASE_DSN` | ./data/gpt-load.db | 数据库连接字符串 (DSN) 或文件路径    |
-| Redis 连接 | `REDIS_DSN`    | -                  | Redis 连接字符串，为空时使用内存存储 |
+| 配置項       | 環境變數       | 預設值             | 說明                                   |
+| ------------ | -------------- | ------------------ | -------------------------------------- |
+| 管理密鑰     | `AUTH_KEY`     | `sk-123456`        | **管理端**的存取認證密鑰               |
+| 資料庫連線   | `DATABASE_DSN` | ./data/gpt-load.db | 資料庫連線字串 (DSN) 或檔案路徑        |
+| Redis 連線   | `REDIS_DSN`    | -                  | Redis 連線字串，為空時使用記憶體儲存   |
 
-**性能与跨域配置：**
+**效能與跨域配置：**
 
-| 配置项       | 环境变量                  | 默认值                        | 说明                     |
+| 配置項       | 環境變數                  | 預設值                        | 說明                     |
 | ------------ | ------------------------- | ----------------------------- | ------------------------ |
-| 最大并发请求 | `MAX_CONCURRENT_REQUESTS` | 100                           | 系统允许的最大并发请求数 |
-| 启用 CORS    | `ENABLE_CORS`             | true                          | 是否启用跨域资源共享     |
-| 允许的来源   | `ALLOWED_ORIGINS`         | `*`                           | 允许的来源，逗号分隔     |
-| 允许的方法   | `ALLOWED_METHODS`         | `GET,POST,PUT,DELETE,OPTIONS` | 允许的 HTTP 方法         |
-| 允许的头部   | `ALLOWED_HEADERS`         | `*`                           | 允许的请求头，逗号分隔   |
-| 允许凭据     | `ALLOW_CREDENTIALS`       | false                         | 是否允许发送凭据         |
+| 最大併發請求 | `MAX_CONCURRENT_REQUESTS` | 100                           | 系統允許的最大併發請求數 |
+| 啟用 CORS    | `ENABLE_CORS`             | true                          | 是否啟用跨域資源共享     |
+| 允許的來源   | `ALLOWED_ORIGINS`         | `*`                           | 允許的來源，逗號分隔     |
+| 允許的方法   | `ALLOWED_METHODS`         | `GET,POST,PUT,DELETE,OPTIONS` | 允許的 HTTP 方法         |
+| 允許的標頭   | `ALLOWED_HEADERS`         | `*`                           | 允許的請求標頭，逗號分隔 |
+| 允許憑證     | `ALLOW_CREDENTIALS`       | false                         | 是否允許傳送憑證         |
 
-**日志配置：**
+**日誌配置：**
 
-| 配置项       | 环境变量          | 默认值                | 说明                               |
+| 配置項       | 環境變數          | 預設值                | 說明                               |
 | ------------ | ----------------- | --------------------- | ---------------------------------- |
-| 日志级别     | `LOG_LEVEL`       | `info`                | 日志级别：debug, info, warn, error |
-| 日志格式     | `LOG_FORMAT`      | `text`                | 日志格式：text, json               |
-| 启用文件日志 | `LOG_ENABLE_FILE` | false                 | 是否启用文件日志输出               |
-| 日志文件路径 | `LOG_FILE_PATH`   | `./data/logs/app.log` | 日志文件存储路径                   |
+| 日誌級別     | `LOG_LEVEL`       | `info`                | 日誌級別：debug, info, warn, error |
+| 日誌格式     | `LOG_FORMAT`      | `text`                | 日誌格式：text, json               |
+| 啟用檔案日誌 | `LOG_ENABLE_FILE` | false                 | 是否啟用檔案日誌輸出               |
+| 日誌檔案路徑 | `LOG_FILE_PATH`   | `./data/logs/app.log` | 日誌檔案儲存路徑                   |
 
 **代理配置：**
 
-GPT-Load 会自动从环境变量中读取代理设置，用于向上游 AI 服务商发起请求。
+GPT-Load 會自動從環境變數中讀取代理設定，用於向上游 AI 服務商發起請求。
 
-| 配置项     | 环境变量      | 默认值 | 说明                                     |
+| 配置項     | 環境變數      | 預設值 | 說明                                     |
 | ---------- | ------------- | ------ | ---------------------------------------- |
-| HTTP 代理  | `HTTP_PROXY`  | -      | 用于 HTTP 请求的代理服务器地址           |
-| HTTPS 代理 | `HTTPS_PROXY` | -      | 用于 HTTPS 请求的代理服务器地址          |
-| 无代理     | `NO_PROXY`    | -      | 不需要通过代理访问的主机或域名，逗号分隔 |
+| HTTP 代理  | `HTTP_PROXY`  | -      | 用於 HTTP 請求的代理伺服器位址           |
+| HTTPS 代理 | `HTTPS_PROXY` | -      | 用於 HTTPS 請求的代理伺服器位址          |
+| 無代理     | `NO_PROXY`    | -      | 不需要透過代理存取的主機或網域名，逗號分隔 |
 
-支持的代理协议格式：
+支援的代理協定格式：
 
 - **HTTP**: `http://user:pass@host:port`
 - **HTTPS**: `https://user:pass@host:port`
@@ -217,91 +217,91 @@ GPT-Load 会自动从环境变量中读取代理设置，用于向上游 AI 服�
 </details>
 
 <details>
-<summary>动态配置（热重载）</summary>
+<summary>動態配置（熱重載）</summary>
 
-**基础设置：**
+**基礎設定：**
 
-| 配置项       | 字段名                               | 默认值                      | 分组可覆盖 | 说明                                   |
+| 配置項       | 欄位名                               | 預設值                      | 分組可覆蓋 | 說明                                   |
 | ------------ | ------------------------------------ | --------------------------- | ---------- | -------------------------------------- |
-| 项目地址     | `app_url`                            | `http://localhost:3001`     | ❌         | 项目基础 URL                           |
-| 日志保留天数 | `request_log_retention_days`         | 7                           | ❌         | 请求日志保留天数，0 为不清理           |
-| 日志写入间隔 | `request_log_write_interval_minutes` | 1                           | ❌         | 日志写入数据库周期（分钟）             |
-| 全局代理密钥 | `proxy_keys`                         | 初始值为环境配置的 AUTH_KEY | ❌         | 全局生效的代理认证密钥，多个用逗号分隔 |
+| 專案位址     | `app_url`                            | `http://localhost:3001`     | ❌         | 專案基礎 URL                           |
+| 日誌保留天數 | `request_log_retention_days`         | 7                           | ❌         | 請求日誌保留天數，0 為不清理           |
+| 日誌寫入間隔 | `request_log_write_interval_minutes` | 1                           | ❌         | 日誌寫入資料庫週期（分鐘）             |
+| 全域代理密鑰 | `proxy_keys`                         | 初始值為環境配置的 AUTH_KEY | ❌         | 全域生效的代理認證密鑰，多個用逗號分隔 |
 
-**请求设置：**
+**請求設定：**
 
-| 配置项               | 字段名                    | 默认值 | 分组可覆盖 | 说明                           |
+| 配置項               | 欄位名                    | 預設值 | 分組可覆蓋 | 說明                           |
 | -------------------- | ------------------------- | ------ | ---------- | ------------------------------ |
-| 请求超时             | `request_timeout`         | 600    | ✅         | 转发请求完整生命周期超时（秒） |
-| 连接超时             | `connect_timeout`         | 15     | ✅         | 与上游服务建立连接超时（秒）   |
-| 空闲连接超时         | `idle_conn_timeout`       | 120    | ✅         | HTTP 客户端空闲连接超时（秒）  |
-| 响应头超时           | `response_header_timeout` | 600    | ✅         | 等待上游响应头超时（秒）       |
-| 最大空闲连接数       | `max_idle_conns`          | 100    | ✅         | 连接池最大空闲连接总数         |
-| 每主机最大空闲连接数 | `max_idle_conns_per_host` | 50     | ✅         | 每个上游主机最大空闲连接数     |
-| 代理服务器地址       | `proxy_url`               | -      | ✅         | 用于转发请求的 HTTP/HTTPS 代理，为空则使用环境配置 |
+| 請求逾時             | `request_timeout`         | 600    | ✅         | 轉發請求完整生命週期逾時（秒） |
+| 連線逾時             | `connect_timeout`         | 15     | ✅         | 與上游服務建立連線逾時（秒）   |
+| 閒置連線逾時         | `idle_conn_timeout`       | 120    | ✅         | HTTP 用戶端閒置連線逾時（秒）  |
+| 回應標頭逾時         | `response_header_timeout` | 600    | ✅         | 等待上游回應標頭逾時（秒）     |
+| 最大閒置連線數       | `max_idle_conns`          | 100    | ✅         | 連線池最大閒置連線總數         |
+| 每主機最大閒置連線數 | `max_idle_conns_per_host` | 50     | ✅         | 每個上游主機最大閒置連線數     |
+| 代理伺服器位址       | `proxy_url`               | -      | ✅         | 用於轉發請求的 HTTP/HTTPS 代理，為空則使用環境配置 |
 
-**密钥配置：**
+**密鑰配置：**
 
-| 配置项         | 字段名                            | 默认值 | 分组可覆盖 | 说明                                             |
+| 配置項         | 欄位名                            | 預設值 | 分組可覆蓋 | 說明                                             |
 | -------------- | --------------------------------- | ------ | ---------- | ------------------------------------------------ |
-| 最大重试次数   | `max_retries`                     | 3      | ✅         | 单个请求使用不同密钥的最大重试次数               |
-| 黑名单阈值     | `blacklist_threshold`             | 3      | ✅         | 密钥连续失败多少次后进入黑名单                   |
-| 密钥验证间隔   | `key_validation_interval_minutes` | 60     | ✅         | 后台定时验证密钥周期（分钟）                     |
-| 密钥验证并发数 | `key_validation_concurrency`      | 10     | ✅         | 后台定时验证无效 Key 时的并发数                  |
-| 密钥验证超时   | `key_validation_timeout_seconds`  | 20     | ✅         | 后台定时验证单个 Key 时的 API 请求超时时间（秒） |
+| 最大重試次數   | `max_retries`                     | 3      | ✅         | 單個請求使用不同密鑰的最大重試次數               |
+| 黑名單閾值     | `blacklist_threshold`             | 3      | ✅         | 密鑰連續失敗多少次後進入黑名單                   |
+| 密鑰驗證間隔   | `key_validation_interval_minutes` | 60     | ✅         | 後台定時驗證密鑰週期（分鐘）                     |
+| 密鑰驗證併發數 | `key_validation_concurrency`      | 10     | ✅         | 後台定時驗證無效 Key 時的併發數                  |
+| 密鑰驗證逾時   | `key_validation_timeout_seconds`  | 20     | ✅         | 後台定時驗證單個 Key 時的 API 請求逾時時間（秒） |
 
 </details>
 
-## Web 管理界面
+## Web 管理介面
 
-访问管理控制台：<http://localhost:3001>（默认地址）
+存取管理控制台：<http://localhost:3001>（預設位址）
 
-### 界面展示
+### 介面展示
 
-<img src="screenshot/dashboard.png" alt="仪表盘" width="600" />
-
-<br/>
-
-<img src="screenshot/keys.png" alt="密钥管理" width="600" />
+<img src="screenshot/dashboard.png" alt="儀表板" width="600" />
 
 <br/>
 
-Web 管理界面提供以下功能：
+<img src="screenshot/keys.png" alt="密鑰管理" width="600" />
 
-- **仪表盘**: 实时统计信息和系统状态概览
-- **密钥管理**: 创建和配置 AI 服务商分组，添加、删除和监控 API 密钥
-- **请求日志**: 详细的请求历史记录和调试信息
-- **系统设置**: 全局配置管理和热重载
+<br/>
 
-## API 使用说明
+Web 管理介面提供以下功能：
+
+- **儀表板**: 即時統計資訊和系統狀態概覽
+- **密鑰管理**: 建立和配置 AI 服務商分組，新增、刪除和監控 API 密鑰
+- **請求日誌**: 詳細的請求歷史記錄和除錯資訊
+- **系統設定**: 全域配置管理和熱重載
+
+## API 使用說明
 
 <details>
-<summary>代理接口调用方式</summary>
+<summary>代理介面呼叫方式</summary>
 
-GPT-Load 通过分组名称路由请求到不同的 AI 服务。使用方式如下：
+GPT-Load 透過分組名稱路由請求到不同的 AI 服務。使用方式如下：
 
-#### 1. 代理端点格式
+#### 1. 代理端點格式
 
 ```text
-http://localhost:3001/proxy/{group_name}/{原始API路径}
+http://localhost:3001/proxy/{group_name}/{原始API路徑}
 ```
 
-- `{group_name}`: 在管理界面创建的分组名称
-- `{原始API路径}`: 保持与原始 AI 服务完全一致的路径
+- `{group_name}`: 在管理介面建立的分組名稱
+- `{原始API路徑}`: 保持與原始 AI 服務完全一致的路徑
 
-#### 2. 认证方式
+#### 2. 認證方式
 
-在 Web 管理界面中配置**代理密钥** (`Proxy Keys`)，可设置系统级别和分组级别的代理密钥。
+在 Web 管理介面中配置**代理密鑰** (`Proxy Keys`)，可設定系統級別和分組級別的代理密鑰。
 
-- **认证方式**: 与原生 API 一致，但需将原始密钥替换为配置的代理密钥。
-- **密钥作用域**: 在系统设置配置的 **全局代理密钥** 可以在所有分组使用，在分组配置的 **分组代理密钥** 仅在当前分组有效。
-- **格式**: 多个密钥使用半角英文逗号分隔。
+- **認證方式**: 與原生 API 一致，但需將原始密鑰替換為配置的代理密鑰。
+- **密鑰作用域**: 在系統設定配置的 **全域代理密鑰** 可以在所有分組使用，在分組配置的 **分組代理密鑰** 僅在當前分組有效。
+- **格式**: 多個密鑰使用半形英文逗號分隔。
 
-#### 3. OpenAI 接口调用示例
+#### 3. OpenAI 介面呼叫範例
 
-假设创建了名为 `openai` 的分组：
+假設建立了名為 `openai` 的分組：
 
-**原始调用方式：**
+**原始呼叫方式：**
 
 ```bash
 curl -X POST https://api.openai.com/v1/chat/completions \
@@ -310,7 +310,7 @@ curl -X POST https://api.openai.com/v1/chat/completions \
   -d '{"model": "gpt-4.1-mini", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
-**代理调用方式：**
+**代理呼叫方式：**
 
 ```bash
 curl -X POST http://localhost:3001/proxy/openai/v1/chat/completions \
@@ -449,13 +449,13 @@ response = client.messages.create(
 )
 ```
 
-> **重要提示**：作为透明代理服务，GPT-Load 完全保留各 AI 服务的原生 API 格式和认证方式，仅需要替换端点地址并使用在管理端配置的**代理密钥**即可无缝迁移。
+> **重要提示**：作為透明代理服務，GPT-Load 完全保留各 AI 服務的原生 API 格式和認證方式，僅需要替換端點位址並使用在管理端配置的**代理密鑰**即可無縫遷移。
 
 </details>
 
-## 许可证
+## 授權條款
 
-MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件。
+MIT 授權條款 - 詳情請參閱 [LICENSE](LICENSE) 檔案。
 
 ## Star History
 

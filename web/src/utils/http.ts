@@ -30,7 +30,7 @@ http.interceptors.request.use(config => {
   return config;
 });
 
-// 响应拦截器
+// 回應攔截器
 http.interceptors.response.use(
   response => {
     appState.loading = false;
@@ -49,15 +49,15 @@ http.interceptors.response.use(
           window.location.href = "/login";
         }
       }
-      window.$message.error(error.response.data?.message || `请求失败: ${error.response.status}`, {
+      window.$message.error(error.response.data?.message || `請求失敗: ${error.response.status}`, {
         keepAliveOnHover: true,
         duration: 5000,
         closable: true,
       });
     } else if (error.request) {
-      window.$message.error("网络错误，请检查您的连接");
+      window.$message.error("網路錯誤，請檢查您的連線");
     } else {
-      window.$message.error("请求设置错误");
+      window.$message.error("請求設定錯誤");
     }
     return Promise.reject(error);
   }

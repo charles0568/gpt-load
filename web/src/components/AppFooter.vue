@@ -24,12 +24,12 @@ const versionInfo = ref<VersionInfo>({
 
 const isChecking = ref(false);
 
-// 版本状态配置
+// 版本狀態配置
 const statusConfig = {
   checking: {
     color: "#0066cc",
     icon: TimeOutline,
-    text: "检查中...",
+    text: "檢查中...",
   },
   latest: {
     color: "#18a058",
@@ -44,7 +44,7 @@ const statusConfig = {
   error: {
     color: "#d03050",
     icon: WarningOutline,
-    text: "检查失败",
+    text: "檢查失敗",
   },
 };
 
@@ -167,10 +167,10 @@ onMounted(() => {
                 class="footer-link"
               >
                 <n-icon :component="BugOutline" :size="14" class="link-icon" />
-                <span>反馈</span>
+                <span>回饋</span>
               </a>
             </template>
-            问题反馈
+            問題回饋
           </n-tooltip>
 
           <n-tooltip trigger="hover" placement="top">
@@ -185,7 +185,7 @@ onMounted(() => {
                 <span>Telegram</span>
               </a>
             </template>
-            加入群组
+            加入群組
           </n-tooltip>
         </div>
 

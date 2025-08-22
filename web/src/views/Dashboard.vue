@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseInfoCard from "@/components/BaseInfoCard.vue";
 import LineChart from "@/components/LineChart.vue";
+import ValidationStatusCard from "@/components/ValidationStatusCard.vue";
 import { NSpace } from "naive-ui";
 </script>
 
@@ -8,6 +9,7 @@ import { NSpace } from "naive-ui";
   <div class="dashboard-container">
     <n-space vertical size="large">
       <base-info-card />
+      <validation-status-card class="validation-status-card" />
       <line-chart class="dashboard-chart" />
     </n-space>
   </div>
@@ -33,8 +35,12 @@ import { NSpace } from "naive-ui";
   font-weight: 500;
 }
 
+.validation-status-card {
+  animation: fadeInUp 0.2s ease-out 0.15s both;
+}
+
 .dashboard-chart {
-  animation: fadeInUp 0.2s ease-out 0.2s both;
+  animation: fadeInUp 0.2s ease-out 0.3s both;
 }
 
 @keyframes fadeInUp {

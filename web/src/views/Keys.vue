@@ -4,7 +4,7 @@ import GroupInfoCard from "@/components/keys/GroupInfoCard.vue";
 import GroupList from "@/components/keys/GroupList.vue";
 import KeyTable from "@/components/keys/KeyTable.vue";
 import BatchKeyValidator from "@/components/keys/BatchKeyValidator.vue";
-import type { Group, APIKey } from "@/types/models";
+import type { Group } from "@/types/models";
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { NTabs, NTab, NEmpty } from "naive-ui";
@@ -13,7 +13,6 @@ const groups = ref<Group[]>([]);
 const loading = ref(false);
 const selectedGroup = ref<Group | null>(null);
 const activeTab = ref('keys');
-const keysForValidation = ref<APIKey[]>([]);
 const router = useRouter();
 const route = useRoute();
 

@@ -175,7 +175,7 @@ async function startValidation() {
     :show="visible"
     title="批量密鑰驗證"
     class="batch-validation-dialog"
-    style="width: 700px"
+    style="width: 800px; max-width: 90vw"
     @update:show="handleClose"
   >
     <n-card>
@@ -200,11 +200,12 @@ async function startValidation() {
 
         <!-- 預設模式 -->
         <n-form-item label="效能預設">
-          <n-space>
+          <n-space size="small" wrap>
             <n-button
               v-for="preset in presetOptions"
               :key="preset.value"
               size="small"
+              type="tertiary"
               @click="applyPreset(preset.value)"
             >
               {{ preset.label }}
@@ -221,26 +222,31 @@ async function startValidation() {
           </template>
 
           <n-form-item label="並發數">
-            <n-space vertical style="width: 100%">
+            <div style="width: 100%">
               <n-slider
                 v-model:value="config.concurrency"
                 :min="1"
                 :max="100"
                 :step="1"
                 show-tooltip
+                style="margin-bottom: 8px"
               />
-              <n-input-number
-                v-model:value="config.concurrency"
-                :min="1"
-                :max="100"
-                size="small"
-                style="width: 120px"
-              />
-            </n-space>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span style="font-size: 12px; color: #999">1</span>
+                <n-input-number
+                  v-model:value="config.concurrency"
+                  :min="1"
+                  :max="100"
+                  size="small"
+                  style="width: 120px"
+                />
+                <span style="font-size: 12px; color: #999">100</span>
+              </div>
+            </div>
           </n-form-item>
 
           <n-form-item label="超時時間">
-            <n-space vertical style="width: 100%">
+            <div style="width: 100%">
               <n-slider
                 v-model:value="config.timeout_seconds"
                 :min="5"
@@ -248,67 +254,85 @@ async function startValidation() {
                 :step="1"
                 show-tooltip
                 :format-tooltip="(value) => `${value} 秒`"
+                style="margin-bottom: 8px"
               />
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span style="font-size: 12px; color: #999">5秒</span>
+                <n-input-number
+                  v-model:value="config.timeout_seconds"
+                  :min="5"
+                  :max="60"
+                  size="small"
+                  style="width: 120px"
+                >
+                  <template #suffix>秒</template>
+                </n-input-number>
+                <span style="font-size: 12px; color: #999">60秒</span>
+              </div>
+            </div>
+          </n-form-item>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+            <n-form-item label="重試次數">
               <n-input-number
-                v-model:value="config.timeout_seconds"
-                :min="5"
-                :max="60"
+                v-model:value="config.max_retries"
+                :min="0"
+                :max="10"
                 size="small"
-                style="width: 120px"
+                style="width: 100%"
+              />
+            </n-form-item>
+
+            <n-form-item label="速率限制">
+              <n-input-number
+                v-model:value="config.rate_limit_per_sec"
+                :min="10"
+                :max="500"
+                size="small"
+                style="width: 100%"
               >
-                <template #suffix>秒</template>
+                <template #suffix>req/s</template>
               </n-input-number>
-            </n-space>
-          </n-form-item>
+            </n-form-item>
+          </div>
 
-          <n-form-item label="重試次數">
-            <n-input-number
-              v-model:value="config.max_retries"
-              :min="0"
-              :max="10"
-              size="small"
-              style="width: 120px"
-            />
-          </n-form-item>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px">
+            <n-form-item label="HTTP/2 多路復用">
+              <n-switch v-model:value="config.enable_http2" />
+            </n-form-item>
 
-          <n-form-item label="速率限制">
-            <n-input-number
-              v-model:value="config.rate_limit_per_sec"
-              :min="10"
-              :max="500"
-              size="small"
-              style="width: 120px"
-            >
-              <template #suffix>req/s</template>
-            </n-input-number>
-          </n-form-item>
+            <n-form-item label="智慧重試">
+              <n-switch v-model:value="config.enable_jitter" />
+            </n-form-item>
 
-          <n-form-item label="HTTP/2 多路復用">
-            <n-switch v-model:value="config.enable_http2" />
-          </n-form-item>
-
-          <n-form-item label="智慧重試">
-            <n-switch v-model:value="config.enable_jitter" />
-          </n-form-item>
-
-          <n-form-item label="結果備份">
-            <n-switch v-model:value="config.backup_results" />
-          </n-form-item>
+            <n-form-item label="結果備份">
+              <n-switch v-model:value="config.backup_results" />
+            </n-form-item>
+          </div>
         </n-card>
 
         <!-- 效能預估 -->
         <n-card title="效能預估" size="small">
-          <n-space vertical>
-            <n-text depth="2">
-              <strong>預估完成時間：</strong> {{ estimatedTime }}
-            </n-text>
-            <n-text depth="2">
-              <strong>理論吞吐量：</strong> {{ throughput }} keys/min
-            </n-text>
-            <n-text depth="2" v-if="selectedGroup">
-              <strong>待驗證密鑰：</strong> {{ selectedGroup.total_keys || 0 }} 個
-            </n-text>
-          </n-space>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center">
+            <div>
+              <n-text depth="3" style="font-size: 12px">預估完成時間</n-text>
+              <div style="font-size: 16px; font-weight: 600; color: var(--primary-color)">
+                {{ estimatedTime }}
+              </div>
+            </div>
+            <div>
+              <n-text depth="3" style="font-size: 12px">理論吞吐量</n-text>
+              <div style="font-size: 16px; font-weight: 600; color: var(--primary-color)">
+                {{ throughput }} keys/min
+              </div>
+            </div>
+            <div v-if="selectedGroup">
+              <n-text depth="3" style="font-size: 12px">待驗證密鑰</n-text>
+              <div style="font-size: 16px; font-weight: 600; color: var(--primary-color)">
+                {{ selectedGroup.total_keys || 0 }} 個
+              </div>
+            </div>
+          </div>
         </n-card>
       </n-form>
 
@@ -345,5 +369,35 @@ async function startValidation() {
 
 .batch-validation-dialog :deep(.n-form-item-label) {
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.batch-validation-dialog :deep(.n-form-item) {
+  margin-bottom: 16px;
+}
+
+.batch-validation-dialog :deep(.n-slider) {
+  margin: 8px 0;
+}
+
+.batch-validation-dialog :deep(.n-input-number) {
+  min-width: 80px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .batch-validation-dialog :deep(.n-dialog) {
+    width: 95vw !important;
+    max-width: none !important;
+  }
+  
+  /* 在小屏幕上使用單列佈局 */
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    display: block !important;
+  }
+  
+  div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+    display: block !important;
+  }
 }
 </style>

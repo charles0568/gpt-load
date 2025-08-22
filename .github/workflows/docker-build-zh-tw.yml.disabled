@@ -25,30 +25,21 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: charles0568
+          password: T8WjC9n94tmTt9
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            charles0568/gpt-load-zh-tw
-            ghcr.io/${{ github.repository }}
+            charles0568/gpt-load
           flavor: |
             latest=auto
           tags: |
             type=ref,event=tag
-            type=ref,event=branch
-            type=raw,value=zh-tw-latest,enable={{is_default_branch}}
-            type=raw,value=zh-tw-{{sha}},enable={{is_default_branch}}
+            type=raw,value=zh-tw,enable={{is_default_branch}}
+            type=raw,value=latest-zh-tw,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: build

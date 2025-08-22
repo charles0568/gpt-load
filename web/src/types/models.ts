@@ -53,6 +53,10 @@ export interface Group {
   proxy_keys: string;
   created_at?: string;
   updated_at?: string;
+  // 統計相關屬性
+  total_keys?: number;
+  active_keys?: number;
+  invalid_keys?: number;
 }
 
 export interface GroupConfigOption {

@@ -1,0 +1,69 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+README_EN.md
+CHANGELOG*.md
+docs/
+screenshot/
+
+# Development files
+.env*
+.qoder/
+.qoderignore
+
+# Node.js
+web/node_modules/
+web/dist/
+web/.vite/
+
+# Go
+vendor/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+gpt-load
+dist/
+build/
+
+# Log files
+*.log
+logs/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Scripts
+*.sh
+*.bat
+*.py
+
+# Test files
+*_test.go
+test-keys.bat
+batch-key-tester.py
+key-analyzer.py
+
+# Data
+data/

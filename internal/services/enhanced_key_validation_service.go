@@ -4,14 +4,13 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"gpt-load/internal/channel"
 	"gpt-load/internal/models"
-	"gpt-load/internal/types"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
@@ -39,13 +38,18 @@ type BatchValidationStats struct {
 
 // BatchValidationConfig represents configuration for batch validation
 type BatchValidationConfig struct {
-	Concurrency       int           `json:"concurrency"`
-	TimeoutSeconds    int           `json:"timeout_seconds"`
-	MaxRetries        int           `json:"max_retries"`
-	RetryDelay        time.Duration `json:"retry_delay"`
-	RateLimitPerSec   int           `json:"rate_limit_per_sec"`
-	EnableMultiplexing bool         `json:"enable_multiplexing"`
-	ProxyURL          string        `json:"proxy_url,omitempty"`
+	Concurrency          int           `json:"concurrency"`
+	TimeoutSeconds       int           `json:"timeout_seconds"`
+	MaxRetries           int           `json:"max_retries"`
+	RetryDelay           time.Duration `json:"retry_delay"`
+	RateLimitPerSec      int           `json:"rate_limit_per_sec"`
+	EnableMultiplexing   bool          `json:"enable_multiplexing"`
+	ProxyURL             string        `json:"proxy_url,omitempty"`
+	EnableHTTP2          bool          `json:"enable_http2"`
+	StreamingThreshold   int           `json:"streaming_threshold"`
+	BackupResults        bool          `json:"backup_results"`
+	MaxRetryBackoffSec   int           `json:"max_retry_backoff_sec"`
+	EnableJitter         bool          `json:"enable_jitter"`
 }
 
 // EnhancedKeyValidationService provides high-performance batch key validation
@@ -72,12 +76,17 @@ type ValidationJob struct {
 // NewEnhancedKeyValidationService creates a new enhanced key validation service
 func NewEnhancedKeyValidationService(channelFactory *channel.Factory) *EnhancedKeyValidationService {
 	config := &BatchValidationConfig{
-		Concurrency:        50,  // High concurrency like Gemini-Keychecker
-		TimeoutSeconds:     15,  // Fast timeout for responsiveness
-		MaxRetries:         3,   // Smart retry mechanism
-		RetryDelay:         time.Second * 2,
-		RateLimitPerSec:    100, // Rate limiting to avoid API limits
-		EnableMultiplexing: true,
+		Concurrency:          50,                // High concurrency like Gemini-Keychecker
+		TimeoutSeconds:       15,                // Fast timeout for responsiveness
+		MaxRetries:           3,                 // Smart retry mechanism
+		RetryDelay:           time.Second * 2,   // Base retry delay
+		RateLimitPerSec:      100,               // Rate limiting to avoid API limits
+		EnableMultiplexing:   true,              // Enable HTTP/2 multiplexing
+		EnableHTTP2:          true,              // Force HTTP/2 for better performance
+		StreamingThreshold:   1000,              // Use streaming for large batches
+		BackupResults:        true,              // Backup validation results
+		MaxRetryBackoffSec:   30,                // Maximum retry backoff time
+		EnableJitter:         true,              // Add jitter to retry delays
 	}
 
 	return &EnhancedKeyValidationService{
@@ -153,6 +162,24 @@ func (s *EnhancedKeyValidationService) executeBatchValidation(
 		return
 	}
 
+	// Use streaming processing for large batches (memory optimization)
+	useStreaming := len(keys) >= s.config.StreamingThreshold
+	
+	if useStreaming {
+		logrus.Infof("Using streaming processing for %d keys (threshold: %d)", len(keys), s.config.StreamingThreshold)
+		s.executeStreamingValidation(job, channelHandler, keys, group)
+	} else {
+		s.executeBatchedValidation(job, channelHandler, keys, group)
+	}
+}
+
+// executeBatchedValidation handles normal batch processing
+func (s *EnhancedKeyValidationService) executeBatchedValidation(
+	job *ValidationJob,
+	channelHandler channel.ChannelProxy,
+	keys []*models.APIKey,
+	group *models.Group,
+) {
 	// Create semaphore for concurrency control
 	semaphore := make(chan struct{}, s.config.Concurrency)
 	var wg sync.WaitGroup
@@ -182,6 +209,92 @@ func (s *EnhancedKeyValidationService) executeBatchValidation(
 				}
 
 				// Store result safely
+				mu.Lock()
+				job.Results = append(job.Results, result)
+				mu.Unlock()
+
+				// Send progress update
+				select {
+				case job.ProgressChan <- result:
+				case <-job.Context.Done():
+					return
+				}
+			}(key)
+		}
+	}
+
+	wg.Wait()
+}
+
+// executeStreamingValidation handles memory-efficient streaming processing
+func (s *EnhancedKeyValidationService) executeStreamingValidation(
+	job *ValidationJob,
+	channelHandler channel.ChannelProxy,
+	keys []*models.APIKey,
+	group *models.Group,
+) {
+	// Process keys in chunks to optimize memory usage
+	chunkSize := s.config.Concurrency * 2 // Process 2x concurrency at a time
+	
+	for i := 0; i < len(keys); i += chunkSize {
+		end := i + chunkSize
+		if end > len(keys) {
+			end = len(keys)
+		}
+		
+		chunk := keys[i:end]
+		
+		// Check for cancellation
+		select {
+		case <-job.Context.Done():
+			logrus.Info("Streaming validation cancelled")
+			return
+		default:
+		}
+		
+		s.processChunk(job, channelHandler, chunk, group)
+		
+		// Add a small delay between chunks to prevent overwhelming the system
+		if i+chunkSize < len(keys) {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
+// processChunk processes a chunk of keys concurrently
+func (s *EnhancedKeyValidationService) processChunk(
+	job *ValidationJob,
+	channelHandler channel.ChannelProxy,
+	chunk []*models.APIKey,
+	group *models.Group,
+) {
+	semaphore := make(chan struct{}, s.config.Concurrency)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	
+	for _, key := range chunk {
+		select {
+		case <-job.Context.Done():
+			return
+		case semaphore <- struct{}{}:
+			wg.Add(1)
+			go func(k *models.APIKey) {
+				defer func() {
+					<-semaphore
+					wg.Done()
+				}()
+
+				result := s.validateSingleKeyWithRetry(job.Context, channelHandler, k, group)
+
+				// Update stats atomically
+				atomic.AddInt32(&job.Stats.ProcessedKeys, 1)
+				if result.IsValid {
+					atomic.AddInt32(&job.Stats.ValidKeys, 1)
+				} else {
+					atomic.AddInt32(&job.Stats.InvalidKeys, 1)
+				}
+
+				// Store result safely (append to results)
 				mu.Lock()
 				job.Results = append(job.Results, result)
 				mu.Unlock()
@@ -237,11 +350,22 @@ func (s *EnhancedKeyValidationService) validateSingleKeyWithRetry(
 
 		// Check if we should retry
 		if attempt < s.config.MaxRetries-1 {
-			// Exponential backoff with jitter
+			// Enhanced exponential backoff with jitter (like Gemini-Keychecker)
 			delay := s.config.RetryDelay * time.Duration(1<<attempt)
-			if delay > time.Second*30 {
-				delay = time.Second * 30 // Max delay of 30 seconds
+			
+			// Apply maximum backoff limit
+			maxDelay := time.Duration(s.config.MaxRetryBackoffSec) * time.Second
+			if delay > maxDelay {
+				delay = maxDelay
 			}
+			
+			// Add jitter to prevent thundering herd
+			if s.config.EnableJitter {
+				jitter := time.Duration(rand.Int63n(int64(delay.Seconds()*0.1))) * time.Second
+				delay += jitter
+			}
+
+			logrus.Debugf("Retrying key validation after %v (attempt %d/%d)", delay, attempt+1, s.config.MaxRetries)
 
 			select {
 			case <-time.After(delay):

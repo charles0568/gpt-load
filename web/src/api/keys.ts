@@ -229,4 +229,120 @@ export const keysApi = {
     const res = await http.get("/tasks/status");
     return res.data;
   },
+
+  // ========== 批量驗證相關 API ==========
+
+  // 開始批量驗證
+  async startBatchValidation(request: {
+    group_id: number;
+    keys: number[];
+    config: {
+      concurrency: number;
+      timeout_seconds: number;
+      max_retries: number;
+      rate_limit_per_sec: number;
+      enable_multiplexing: boolean;
+      enable_http2: boolean;
+      streaming_threshold: number;
+      backup_results: boolean;
+      enable_jitter: boolean;
+      proxy_url: string;
+    };
+  }): Promise<{
+    id: string;
+    status: string;
+    stats: {
+      total_keys: number;
+      valid_keys: number;
+      invalid_keys: number;
+      processed_keys: number;
+      start_time: string;
+      duration: number;
+      error_rate: number;
+    };
+  }> {
+    const res = await http.post("/keys/batch-validate", request);
+    return res.data;
+  },
+
+  // 獲取批量驗證狀態
+  async getValidationStatus(jobId: string): Promise<{
+    id: string;
+    status: "running" | "completed" | "failed" | "cancelled";
+    stats: {
+      total_keys: number;
+      valid_keys: number;
+      invalid_keys: number;
+      processed_keys: number;
+      start_time: string;
+      duration: number;
+      error_rate: number;
+    };
+    results: Array<{
+      key: {
+        id: number;
+        key_value: string;
+        status: string;
+      };
+      is_valid: boolean;
+      error?: string;
+      duration: number;
+      timestamp: string;
+    }>;
+  }> {
+    const res = await http.get(`/keys/validation-status/${jobId}`);
+    return res.data;
+  },
+
+  // 取消批量驗證
+  async cancelValidation(jobId: string): Promise<{ message: string }> {
+    const res = await http.delete(`/keys/validation-jobs/${jobId}`);
+    return res.data;
+  },
+
+  // 獲取驗證配置
+  async getValidationConfig(): Promise<{
+    concurrency: number;
+    timeout_seconds: number;
+    max_retries: number;
+    rate_limit_per_sec: number;
+    enable_multiplexing: boolean;
+    enable_http2: boolean;
+    streaming_threshold: number;
+    backup_results: boolean;
+    max_retry_backoff_sec: number;
+    enable_jitter: boolean;
+    proxy_url: string;
+  }> {
+    const res = await http.get("/keys/validation-config");
+    return res.data;
+  },
+
+  // 更新驗證配置
+  async updateValidationConfig(config: {
+    concurrency: number;
+    timeout_seconds: number;
+    max_retries: number;
+    rate_limit_per_sec: number;
+    enable_multiplexing: boolean;
+    enable_http2: boolean;
+    streaming_threshold: number;
+    backup_results: boolean;
+    max_retry_backoff_sec: number;
+    enable_jitter: boolean;
+    proxy_url: string;
+  }): Promise<{
+    message: string;
+    config: any;
+  }> {
+    const res = await http.put("/keys/validation-config", config);
+    return res.data;
+  },
+
+  // 驗證進度流 (Server-Sent Events)
+  createValidationProgressStream(jobId: string): EventSource {
+    const authKey = localStorage.getItem("authKey");
+    const url = `${http.defaults.baseURL}/keys/validation-progress/${jobId}?key=${authKey}`;
+    return new EventSource(url);
+  },
 };

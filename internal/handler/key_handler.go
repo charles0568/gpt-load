@@ -5,6 +5,7 @@ import (
 	app_errors "gpt-load/internal/errors"
 	"gpt-load/internal/models"
 	"gpt-load/internal/response"
+	"gpt-load/internal/services"
 	"log"
 	"strconv"
 	"strings"
@@ -67,23 +68,6 @@ type GroupIDRequest struct {
 type ValidateGroupKeysRequest struct {
 	GroupID uint   `json:"group_id" binding:"required"`
 	Status  string `json:"status,omitempty"`
-}
-
-// BatchValidationRequest defines the payload for batch key validation
-type BatchValidationRequest struct {
-	GroupID uint     `json:"group_id" binding:"required"`
-	KeyIDs  []uint   `json:"key_ids,omitempty"` // If empty, validate all keys in group
-	Config  *BatchValidationConfig `json:"config,omitempty"`
-}
-
-// BatchValidationConfig represents configuration for batch validation
-type BatchValidationConfig struct {
-	Concurrency        int    `json:"concurrency,omitempty"`
-	TimeoutSeconds     int    `json:"timeout_seconds,omitempty"`
-	MaxRetries         int    `json:"max_retries,omitempty"`
-	RateLimitPerSec    int    `json:"rate_limit_per_sec,omitempty"`
-	EnableMultiplexing bool   `json:"enable_multiplexing,omitempty"`
-	ProxyURL           string `json:"proxy_url,omitempty"`
 }
 
 // AddMultipleKeys handles creating new keys from a text block within a specific group.
@@ -417,7 +401,21 @@ func (s *Server) ExportKeys(c *gin.Context) {
 	}
 }
 
-// ValidateBatchAsync starts an asynchronous batch validation job
+// BatchValidationRequest represents the request for batch key validation
+type BatchValidationRequest struct {
+	GroupID uint     `json:"group_id" binding:"required"`
+	Keys    []uint   `json:"keys" binding:"required"`
+	Config  struct {
+		Concurrency        int  `json:"concurrency"`
+		TimeoutSeconds     int  `json:"timeout_seconds"`
+		MaxRetries         int  `json:"max_retries"`
+		RateLimitPerSec    int  `json:"rate_limit_per_sec"`
+		EnableMultiplexing bool `json:"enable_multiplexing"`
+		ProxyURL           string `json:"proxy_url"`
+	} `json:"config"`
+}
+
+// ValidateBatchAsync starts asynchronous batch validation
 func (s *Server) ValidateBatchAsync(c *gin.Context) {
 	var req BatchValidationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -425,28 +423,22 @@ func (s *Server) ValidateBatchAsync(c *gin.Context) {
 		return
 	}
 
+	// 驗證分組是否存在
 	groupDB, ok := s.findGroupByID(c, req.GroupID)
 	if !ok {
 		return
 	}
 
-	// Get group from group manager
-	group, err := s.GroupManager.GetGroupByName(groupDB.Name)
-	if err != nil {
-		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, fmt.Sprintf("Group '%s' not found", groupDB.Name)))
-		return
-	}
-
-	// Get keys to validate
+	// 獲取分組的密鑰
 	var keys []*models.APIKey
-	if len(req.KeyIDs) > 0 {
-		// Validate specific keys
-		if err := s.DB.Where("group_id = ? AND id IN ?", req.GroupID, req.KeyIDs).Find(&keys).Error; err != nil {
+	if len(req.Keys) > 0 {
+		// 獲取指定的密鑰
+		if err := s.DB.Where("id IN ? AND group_id = ?", req.Keys, req.GroupID).Find(&keys).Error; err != nil {
 			response.Error(c, app_errors.ParseDBError(err))
 			return
 		}
 	} else {
-		// Validate all keys in group
+		// 獲取分組所有密鑰
 		if err := s.DB.Where("group_id = ?", req.GroupID).Find(&keys).Error; err != nil {
 			response.Error(c, app_errors.ParseDBError(err))
 			return
@@ -458,42 +450,31 @@ func (s *Server) ValidateBatchAsync(c *gin.Context) {
 		return
 	}
 
-	// Update validation configuration if provided
-	if req.Config != nil {
-		config := &services.BatchValidationConfig{
-			Concurrency:        req.Config.Concurrency,
-			TimeoutSeconds:     req.Config.TimeoutSeconds,
-			MaxRetries:         req.Config.MaxRetries,
-			RateLimitPerSec:    req.Config.RateLimitPerSec,
-			EnableMultiplexing: req.Config.EnableMultiplexing,
-			ProxyURL:           req.Config.ProxyURL,
-		}
-
-		// Apply default values if not provided
-		if config.Concurrency <= 0 {
-			config.Concurrency = 50
-		}
-		if config.TimeoutSeconds <= 0 {
-			config.TimeoutSeconds = 15
-		}
-		if config.MaxRetries < 0 {
-			config.MaxRetries = 3
-		}
-		if config.RateLimitPerSec <= 0 {
-			config.RateLimitPerSec = 100
-		}
-
-		s.EnhancedKeyValidationService.UpdateConfig(config)
-	}
-
-	// Start batch validation
-	job, err := s.EnhancedKeyValidationService.ValidateBatchAsync(c.Request.Context(), group, keys)
+	// 獲取分組管理器中的分組
+	group, err := s.GroupManager.GetGroupByName(groupDB.Name)
 	if err != nil {
-		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, fmt.Sprintf("Failed to start batch validation: %v", err)))
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, fmt.Sprintf("Group '%s' not found", groupDB.Name)))
 		return
 	}
 
-	response.Success(c, job)
+	// 檢查是否有 EnhancedKeyValidationService
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
+	// 開始批量驗證
+	job, err := s.EnhancedKeyValidationService.ValidateBatchAsync(c.Request.Context(), group, keys)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, err.Error()))
+		return
+	}
+
+	response.Success(c, gin.H{
+		"id":     job.ID,
+		"status": job.Status,
+		"stats":  job.Stats,
+	})
 }
 
 // GetValidationStatus returns the status of a batch validation job
@@ -504,13 +485,23 @@ func (s *Server) GetValidationStatus(c *gin.Context) {
 		return
 	}
 
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
 	job, err := s.EnhancedKeyValidationService.GetJobStatus(jobID)
 	if err != nil {
 		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, err.Error()))
 		return
 	}
 
-	response.Success(c, job)
+	response.Success(c, gin.H{
+		"id":      job.ID,
+		"status":  job.Status,
+		"stats":   job.Stats,
+		"results": job.Results,
+	})
 }
 
 // CancelValidation cancels a running batch validation job
@@ -521,47 +512,129 @@ func (s *Server) CancelValidation(c *gin.Context) {
 		return
 	}
 
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
 	err := s.EnhancedKeyValidationService.CancelJob(jobID)
 	if err != nil {
 		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, err.Error()))
 		return
 	}
 
-	response.Success(c, gin.H{"message": "Validation job cancelled successfully"})
+	response.Success(c, gin.H{
+		"message": "Validation job cancelled successfully",
+	})
 }
 
-// GetBatchValidationConfig returns the current batch validation configuration
-func (s *Server) GetBatchValidationConfig(c *gin.Context) {
+// GetValidationConfig returns the current batch validation configuration
+func (s *Server) GetValidationConfig(c *gin.Context) {
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
 	config := s.EnhancedKeyValidationService.GetConfig()
 	response.Success(c, config)
 }
 
-// UpdateBatchValidationConfig updates the batch validation configuration
-func (s *Server) UpdateBatchValidationConfig(c *gin.Context) {
+// UpdateValidationConfig updates the batch validation configuration
+func (s *Server) UpdateValidationConfig(c *gin.Context) {
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
 	var config services.BatchValidationConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		response.Error(c, app_errors.NewAPIError(app_errors.ErrInvalidJSON, err.Error()))
 		return
 	}
 
-	// Validate configuration
-	if config.Concurrency <= 0 || config.Concurrency > 200 {
+	// 驗證配置值
+	if config.Concurrency < 1 || config.Concurrency > 200 {
 		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Concurrency must be between 1 and 200"))
 		return
 	}
-	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 120 {
-		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Timeout must be between 1 and 120 seconds"))
+
+	if config.TimeoutSeconds < 5 || config.TimeoutSeconds > 300 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Timeout must be between 5 and 300 seconds"))
 		return
 	}
+
 	if config.MaxRetries < 0 || config.MaxRetries > 10 {
 		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Max retries must be between 0 and 10"))
 		return
 	}
-	if config.RateLimitPerSec <= 0 || config.RateLimitPerSec > 500 {
-		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Rate limit must be between 1 and 500 per second"))
+
+	if config.RateLimitPerSec < 1 || config.RateLimitPerSec > 1000 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Rate limit must be between 1 and 1000 requests per second"))
 		return
 	}
 
 	s.EnhancedKeyValidationService.UpdateConfig(&config)
-	response.Success(c, gin.H{"message": "Configuration updated successfully"})
+	response.Success(c, gin.H{
+		"message": "Validation configuration updated successfully",
+		"config":  config,
+	})
+}
+
+// StreamValidationProgress provides Server-Sent Events for validation progress
+func (s *Server) StreamValidationProgress(c *gin.Context) {
+	jobID := c.Param("job_id")
+	if jobID == "" {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrBadRequest, "Job ID is required"))
+		return
+	}
+
+	if s.EnhancedKeyValidationService == nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, "Batch validation service not available"))
+		return
+	}
+
+	job, err := s.EnhancedKeyValidationService.GetJobStatus(jobID)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, err.Error()))
+		return
+	}
+
+	// Set SSE headers
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Access-Control-Allow-Origin", "*")
+
+	// Stream progress updates
+	for {
+		select {
+		case result, ok := <-job.ProgressChan:
+			if !ok {
+				// Channel closed, job completed
+				c.SSEvent("complete", gin.H{
+					"status": job.Status,
+					"stats":  job.Stats,
+				})
+				return
+			}
+
+			// Send progress update
+			c.SSEvent("progress", gin.H{
+				"result": result,
+				"stats":  job.Stats,
+			})
+			c.Writer.Flush()
+
+		case <-c.Request.Context().Done():
+			// Client disconnected
+			return
+
+		case <-time.After(30 * time.Second):
+			// Timeout to prevent hanging connections
+			c.SSEvent("timeout", gin.H{
+				"message": "Connection timeout",
+			})
+			return
+		}
+	}
 }

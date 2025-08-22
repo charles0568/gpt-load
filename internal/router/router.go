@@ -128,6 +128,11 @@ func registerProtectedAPIRoutes(api *gin.RouterGroup, serverHandler *handler.Ser
 		keys.POST("/clear-all", serverHandler.ClearAllKeys)
 		keys.POST("/validate-group", serverHandler.ValidateGroupKeys)
 		keys.POST("/test-multiple", serverHandler.TestMultipleKeys)
+
+		// 批量驗證相關 API
+		keys.POST("/validate-batch-async", serverHandler.ValidateBatchAsync)
+		keys.GET("/validation-status/:job_id", serverHandler.GetValidationStatus)
+		keys.POST("/cancel-validation/:job_id", serverHandler.CancelValidation)
 	}
 
 	// Tasks

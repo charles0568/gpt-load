@@ -17,46 +17,49 @@ import (
 
 // Server contains dependencies for HTTP handlers
 type Server struct {
-	DB                         *gorm.DB
-	config                     types.ConfigManager
-	SettingsManager            *config.SystemSettingsManager
-	GroupManager               *services.GroupManager
-	KeyManualValidationService *services.KeyManualValidationService
-	TaskService                *services.TaskService
-	KeyService                 *services.KeyService
-	KeyImportService           *services.KeyImportService
-	LogService                 *services.LogService
-	CommonHandler              *CommonHandler
+	DB                            *gorm.DB
+	config                        types.ConfigManager
+	SettingsManager               *config.SystemSettingsManager
+	GroupManager                  *services.GroupManager
+	KeyManualValidationService    *services.KeyManualValidationService
+	EnhancedKeyValidationService  *services.EnhancedKeyValidationService
+	TaskService                   *services.TaskService
+	KeyService                    *services.KeyService
+	KeyImportService              *services.KeyImportService
+	LogService                    *services.LogService
+	CommonHandler                 *CommonHandler
 }
 
 // NewServerParams defines the dependencies for the NewServer constructor.
 type NewServerParams struct {
 	dig.In
-	DB                         *gorm.DB
-	Config                     types.ConfigManager
-	SettingsManager            *config.SystemSettingsManager
-	GroupManager               *services.GroupManager
-	KeyManualValidationService *services.KeyManualValidationService
-	TaskService                *services.TaskService
-	KeyService                 *services.KeyService
-	KeyImportService           *services.KeyImportService
-	LogService                 *services.LogService
-	CommonHandler              *CommonHandler
+	DB                            *gorm.DB
+	Config                        types.ConfigManager
+	SettingsManager               *config.SystemSettingsManager
+	GroupManager                  *services.GroupManager
+	KeyManualValidationService    *services.KeyManualValidationService
+	EnhancedKeyValidationService  *services.EnhancedKeyValidationService
+	TaskService                   *services.TaskService
+	KeyService                    *services.KeyService
+	KeyImportService              *services.KeyImportService
+	LogService                    *services.LogService
+	CommonHandler                 *CommonHandler
 }
 
 // NewServer creates a new handler instance with dependencies injected by dig.
 func NewServer(params NewServerParams) *Server {
 	return &Server{
-		DB:                         params.DB,
-		config:                     params.Config,
-		SettingsManager:            params.SettingsManager,
-		GroupManager:               params.GroupManager,
-		KeyManualValidationService: params.KeyManualValidationService,
-		TaskService:                params.TaskService,
-		KeyService:                 params.KeyService,
-		KeyImportService:           params.KeyImportService,
-		LogService:                 params.LogService,
-		CommonHandler:              params.CommonHandler,
+		DB:                            params.DB,
+		config:                        params.Config,
+		SettingsManager:               params.SettingsManager,
+		GroupManager:                  params.GroupManager,
+		KeyManualValidationService:    params.KeyManualValidationService,
+		EnhancedKeyValidationService:  params.EnhancedKeyValidationService,
+		TaskService:                   params.TaskService,
+		KeyService:                    params.KeyService,
+		KeyImportService:              params.KeyImportService,
+		LogService:                    params.LogService,
+		CommonHandler:                 params.CommonHandler,
 	}
 }
 

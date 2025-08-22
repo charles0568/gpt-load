@@ -8,6 +8,7 @@ import {
   AddCircleOutline,
   AlertCircleOutline,
   CheckmarkCircle,
+  CheckmarkCircleOutline,
   CopyOutline,
   EyeOffOutline,
   EyeOutline,
@@ -29,6 +30,7 @@ import {
 import { h, ref, watch } from "vue";
 import KeyCreateDialog from "./KeyCreateDialog.vue";
 import KeyDeleteDialog from "./KeyDeleteDialog.vue";
+import BatchCheckDialog from "./BatchCheckDialog.vue";
 
 interface KeyRow extends APIKey {
   is_visible: boolean;
@@ -50,6 +52,12 @@ const total = ref(0);
 const totalPages = ref(0);
 const dialog = useDialog();
 const confirmInput = ref("");
+
+// 對話框狀態
+const batchCheckDialogShow = ref(false);
+
+// 計算屬性
+const currentGroupId = computed(() => props.selectedGroup?.id);
 
 // 状态过滤选项
 const statusOptions = [
@@ -590,6 +598,12 @@ function resetPage() {
           </template>
           刪除密鑰
         </n-button>
+        <n-button type="primary" size="small" @click="batchCheckDialogShow = true" :disabled="!currentGroupId">
+          <template #icon>
+            <n-icon :component="CheckmarkCircleOutline" />
+          </template>
+          一鍵檢查
+        </n-button>
       </div>
       <div class="toolbar-right">
         <n-space :size="12">
@@ -771,6 +785,14 @@ function resetPage() {
       :group-id="selectedGroup.id"
       :group-name="getGroupDisplayName(selectedGroup!)"
       @success="handleBatchDeleteSuccess"
+    />
+
+    <batch-check-dialog
+      v-if="selectedGroup?.id"
+      v-model:visible="batchCheckDialogShow"
+      :group-id="selectedGroup.id"
+      :groups="[{ label: getGroupDisplayName(selectedGroup!), value: selectedGroup.id }]"
+      @completed="loadKeys"
     />
   </div>
 </template>

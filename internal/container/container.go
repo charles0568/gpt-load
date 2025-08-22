@@ -48,6 +48,9 @@ func BuildContainer() (*dig.Container, error) {
 	if err := container.Provide(services.NewKeyManualValidationService); err != nil {
 		return nil, err
 	}
+	if err := container.Provide(services.NewEnhancedKeyValidationService); err != nil {
+		return nil, err
+	}
 	if err := container.Provide(services.NewKeyService); err != nil {
 		return nil, err
 	}

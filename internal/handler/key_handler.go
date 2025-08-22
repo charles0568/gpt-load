@@ -69,6 +69,23 @@ type ValidateGroupKeysRequest struct {
 	Status  string `json:"status,omitempty"`
 }
 
+// BatchValidationRequest defines the payload for batch key validation
+type BatchValidationRequest struct {
+	GroupID uint     `json:"group_id" binding:"required"`
+	KeyIDs  []uint   `json:"key_ids,omitempty"` // If empty, validate all keys in group
+	Config  *BatchValidationConfig `json:"config,omitempty"`
+}
+
+// BatchValidationConfig represents configuration for batch validation
+type BatchValidationConfig struct {
+	Concurrency        int    `json:"concurrency,omitempty"`
+	TimeoutSeconds     int    `json:"timeout_seconds,omitempty"`
+	MaxRetries         int    `json:"max_retries,omitempty"`
+	RateLimitPerSec    int    `json:"rate_limit_per_sec,omitempty"`
+	EnableMultiplexing bool   `json:"enable_multiplexing,omitempty"`
+	ProxyURL           string `json:"proxy_url,omitempty"`
+}
+
 // AddMultipleKeys handles creating new keys from a text block within a specific group.
 func (s *Server) AddMultipleKeys(c *gin.Context) {
 	var req KeyTextRequest
@@ -398,4 +415,153 @@ func (s *Server) ExportKeys(c *gin.Context) {
 	if err != nil {
 		log.Printf("Failed to stream keys: %v", err)
 	}
+}
+
+// ValidateBatchAsync starts an asynchronous batch validation job
+func (s *Server) ValidateBatchAsync(c *gin.Context) {
+	var req BatchValidationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInvalidJSON, err.Error()))
+		return
+	}
+
+	groupDB, ok := s.findGroupByID(c, req.GroupID)
+	if !ok {
+		return
+	}
+
+	// Get group from group manager
+	group, err := s.GroupManager.GetGroupByName(groupDB.Name)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, fmt.Sprintf("Group '%s' not found", groupDB.Name)))
+		return
+	}
+
+	// Get keys to validate
+	var keys []*models.APIKey
+	if len(req.KeyIDs) > 0 {
+		// Validate specific keys
+		if err := s.DB.Where("group_id = ? AND id IN ?", req.GroupID, req.KeyIDs).Find(&keys).Error; err != nil {
+			response.Error(c, app_errors.ParseDBError(err))
+			return
+		}
+	} else {
+		// Validate all keys in group
+		if err := s.DB.Where("group_id = ?", req.GroupID).Find(&keys).Error; err != nil {
+			response.Error(c, app_errors.ParseDBError(err))
+			return
+		}
+	}
+
+	if len(keys) == 0 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "No keys found for validation"))
+		return
+	}
+
+	// Update validation configuration if provided
+	if req.Config != nil {
+		config := &services.BatchValidationConfig{
+			Concurrency:        req.Config.Concurrency,
+			TimeoutSeconds:     req.Config.TimeoutSeconds,
+			MaxRetries:         req.Config.MaxRetries,
+			RateLimitPerSec:    req.Config.RateLimitPerSec,
+			EnableMultiplexing: req.Config.EnableMultiplexing,
+			ProxyURL:           req.Config.ProxyURL,
+		}
+
+		// Apply default values if not provided
+		if config.Concurrency <= 0 {
+			config.Concurrency = 50
+		}
+		if config.TimeoutSeconds <= 0 {
+			config.TimeoutSeconds = 15
+		}
+		if config.MaxRetries < 0 {
+			config.MaxRetries = 3
+		}
+		if config.RateLimitPerSec <= 0 {
+			config.RateLimitPerSec = 100
+		}
+
+		s.EnhancedKeyValidationService.UpdateConfig(config)
+	}
+
+	// Start batch validation
+	job, err := s.EnhancedKeyValidationService.ValidateBatchAsync(c.Request.Context(), group, keys)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInternalServer, fmt.Sprintf("Failed to start batch validation: %v", err)))
+		return
+	}
+
+	response.Success(c, job)
+}
+
+// GetValidationStatus returns the status of a batch validation job
+func (s *Server) GetValidationStatus(c *gin.Context) {
+	jobID := c.Param("job_id")
+	if jobID == "" {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrBadRequest, "Job ID is required"))
+		return
+	}
+
+	job, err := s.EnhancedKeyValidationService.GetJobStatus(jobID)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, err.Error()))
+		return
+	}
+
+	response.Success(c, job)
+}
+
+// CancelValidation cancels a running batch validation job
+func (s *Server) CancelValidation(c *gin.Context) {
+	jobID := c.Param("job_id")
+	if jobID == "" {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrBadRequest, "Job ID is required"))
+		return
+	}
+
+	err := s.EnhancedKeyValidationService.CancelJob(jobID)
+	if err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrResourceNotFound, err.Error()))
+		return
+	}
+
+	response.Success(c, gin.H{"message": "Validation job cancelled successfully"})
+}
+
+// GetBatchValidationConfig returns the current batch validation configuration
+func (s *Server) GetBatchValidationConfig(c *gin.Context) {
+	config := s.EnhancedKeyValidationService.GetConfig()
+	response.Success(c, config)
+}
+
+// UpdateBatchValidationConfig updates the batch validation configuration
+func (s *Server) UpdateBatchValidationConfig(c *gin.Context) {
+	var config services.BatchValidationConfig
+	if err := c.ShouldBindJSON(&config); err != nil {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrInvalidJSON, err.Error()))
+		return
+	}
+
+	// Validate configuration
+	if config.Concurrency <= 0 || config.Concurrency > 200 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Concurrency must be between 1 and 200"))
+		return
+	}
+	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 120 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Timeout must be between 1 and 120 seconds"))
+		return
+	}
+	if config.MaxRetries < 0 || config.MaxRetries > 10 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Max retries must be between 0 and 10"))
+		return
+	}
+	if config.RateLimitPerSec <= 0 || config.RateLimitPerSec > 500 {
+		response.Error(c, app_errors.NewAPIError(app_errors.ErrValidation, "Rate limit must be between 1 and 500 per second"))
+		return
+	}
+
+	s.EnhancedKeyValidationService.UpdateConfig(&config)
+	response.Success(c, gin.H{"message": "Configuration updated successfully"})
 }

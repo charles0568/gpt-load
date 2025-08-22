@@ -3,10 +3,10 @@ name: Build and Push Docker Images
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
     branches:
       - main
-      - clean-batch-validation
   workflow_dispatch:
     inputs:
       version:

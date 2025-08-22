@@ -19,7 +19,6 @@ jobs:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
     permissions:
-      packages: write
       contents: read
     steps:
       - name: Checkout repository
@@ -40,14 +39,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract version from tag or input
         id: version
         run: |
@@ -65,7 +56,6 @@ jobs:
         with:
           images: |
             charles0568/gpt-load
-            ghcr.io/${{ github.repository }}
           flavor: |
             latest=auto
           tags: |
@@ -103,9 +93,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Usage" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "# Docker Hub" >> $GITHUB_STEP_SUMMARY
           echo "docker run -d -p 3001:3001 charles0568/gpt-load:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
-          echo "docker run -d -p 3001:3001 ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY

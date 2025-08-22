@@ -3,15 +3,23 @@ import { keysApi } from "@/api/keys";
 import GroupInfoCard from "@/components/keys/GroupInfoCard.vue";
 import GroupList from "@/components/keys/GroupList.vue";
 import KeyTable from "@/components/keys/KeyTable.vue";
+import BatchKeyValidator from "@/components/keys/BatchKeyValidator.vue";
 import type { Group } from "@/types/models";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { NTabs, NTab, NEmpty } from "naive-ui";
 
 const groups = ref<Group[]>([]);
 const loading = ref(false);
 const selectedGroup = ref<Group | null>(null);
+const activeTab = ref('keys');
 const router = useRouter();
 const route = useRoute();
+
+// 計算屬性：為批量驗證組件準備密鑰
+const validationKeys = computed(() => {
+  return selectedGroup.value?.api_keys || [];
+});
 
 onMounted(async () => {
   await loadGroups();
@@ -21,14 +29,15 @@ async function loadGroups() {
   try {
     loading.value = true;
     groups.value = await keysApi.getGroups();
-    // 选择默认分组
+    // 選擇默認分組
     if (groups.value.length > 0 && !selectedGroup.value) {
       const groupId = route.query.groupId;
       const found = groups.value.find(g => String(g.id) === String(groupId));
       if (found) {
         selectedGroup.value = found;
+        await loadGroupKeys(found);
       } else {
-        handleGroupSelect(groups.value[0]);
+        await handleGroupSelect(groups.value[0]);
       }
     }
   } finally {
@@ -36,10 +45,35 @@ async function loadGroups() {
   }
 }
 
-function handleGroupSelect(group: Group | null) {
+// 新增函數：加載分組的密鑰數據
+async function loadGroupKeys(group: Group) {
+  if (!group?.id) return;
+
+  try {
+    const result = await keysApi.getGroupKeys({
+      group_id: group.id,
+      page: 1,
+      page_size: 1000, // 獲取所有密鑰用於批量驗證
+    });
+
+    // 更新選中分組的 api_keys 屬性
+    if (selectedGroup.value?.id === group.id) {
+      selectedGroup.value.api_keys = result.items;
+    }
+  } catch (error) {
+    console.error('Failed to load group keys:', error);
+  }
+}
+
+async function handleGroupSelect(group: Group | null) {
   selectedGroup.value = group || null;
   if (String(group?.id) !== String(route.query.groupId)) {
     router.push({ name: "keys", query: { groupId: group?.id || "" } });
+  }
+
+  // 加載選中分組的密鑰數據
+  if (group) {
+    await loadGroupKeys(group);
   }
 }
 
@@ -94,9 +128,9 @@ async function handleGroupCopySuccess(newGroup: Group) {
       />
     </div>
 
-    <!-- 右侧主内容区域，占80% -->
+    <!-- 右側主內容區域 -->
     <div class="main-content">
-      <!-- 分组信息卡片，更紧凑 -->
+      <!-- 分組信息卡片 -->
       <div class="group-info">
         <group-info-card
           :group="selectedGroup"
@@ -106,9 +140,27 @@ async function handleGroupCopySuccess(newGroup: Group) {
         />
       </div>
 
-      <!-- 密钥表格区域，占主要空间 -->
-      <div class="key-table-section">
-        <key-table :selected-group="selectedGroup" />
+      <!-- 主要內容區域使用選項卡 -->
+      <div class="content-tabs">
+        <n-tabs v-model:value="activeTab" type="line" animated>
+          <n-tab name="keys" tab="🔑 密鑰管理">
+            <div class="key-table-section">
+              <key-table :selected-group="selectedGroup" />
+            </div>
+          </n-tab>
+
+          <n-tab name="batch-validation" tab="⚡ 批量驗證" :disabled="!selectedGroup">
+            <div class="batch-validation-section" v-if="selectedGroup">
+              <batch-key-validator
+                :group-id="selectedGroup.id!"
+                :keys="validationKeys"
+              />
+            </div>
+            <div v-else class="empty-state">
+              <n-empty description="請先選擇一個分組" />
+            </div>
+          </n-tab>
+        </n-tabs>
       </div>
     </div>
   </div>
@@ -138,11 +190,31 @@ async function handleGroupCopySuccess(newGroup: Group) {
   flex-shrink: 0;
 }
 
+.content-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .key-table-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.batch-validation-section {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
 }
 
 @media (min-width: 768px) {
@@ -154,5 +226,18 @@ async function handleGroupCopySuccess(newGroup: Group) {
     width: 240px;
     height: calc(100vh - 159px);
   }
+}
+
+/* 確保選項卡內容區域能正確填滿空間 */
+:deep(.n-tabs-pane-wrapper) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-tab-pane) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 </style>

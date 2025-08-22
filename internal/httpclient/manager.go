@@ -68,10 +68,12 @@ func (m *HTTPClientManager) GetClient(config *Config) *http.Client {
 	}
 
 	// Create a new transport and client with the specified configuration.
+	// Optimized for Gemini-Keychecker style high-performance validation
 	transport := &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   config.ConnectTimeout,
 			KeepAlive: 30 * time.Second,
+			DualStack: true, // Enable IPv4/IPv6 dual stack for better connectivity
 		}).DialContext,
 		ForceAttemptHTTP2:     config.ForceAttemptHTTP2,
 		MaxIdleConns:          config.MaxIdleConns,
@@ -83,6 +85,9 @@ func (m *HTTPClientManager) GetClient(config *Config) *http.Client {
 		DisableCompression:    config.DisableCompression,
 		WriteBufferSize:       config.WriteBufferSize,
 		ReadBufferSize:        config.ReadBufferSize,
+		// Enhanced settings for high-concurrency batch validation
+		MaxConnsPerHost:       config.MaxIdleConnsPerHost * 2, // Allow more concurrent connections
+		DisableKeepAlives:     false,                           // Keep connections alive for better performance
 	}
 
 	// Set http proxy.
@@ -105,6 +110,28 @@ func (m *HTTPClientManager) GetClient(config *Config) *http.Client {
 
 	m.clients[fingerprint] = newClient
 	return newClient
+}
+
+// GetBatchValidationClient returns an HTTP client optimized for batch validation tasks
+// This client is configured with high-concurrency settings similar to Gemini-Keychecker
+func (m *HTTPClientManager) GetBatchValidationClient(proxyURL string) *http.Client {
+	config := &Config{
+		ConnectTimeout:        15 * time.Second,  // Quick connection timeout
+		RequestTimeout:        30 * time.Second,  // Reasonable request timeout
+		IdleConnTimeout:       120 * time.Second, // Keep connections alive longer
+		MaxIdleConns:          200,               // High connection pool size
+		MaxIdleConnsPerHost:   100,               // Many connections per host
+		ResponseHeaderTimeout: 30 * time.Second,  // Wait for response headers
+		DisableCompression:    false,             // Enable compression for efficiency
+		WriteBufferSize:       64 * 1024,         // Larger write buffer
+		ReadBufferSize:        64 * 1024,         // Larger read buffer
+		ForceAttemptHTTP2:     true,              // Force HTTP/2 for multiplexing
+		TLSHandshakeTimeout:   10 * time.Second,  // Quick TLS handshake
+		ExpectContinueTimeout: 1 * time.Second,   // Quick expect continue
+		ProxyURL:              proxyURL,
+	}
+	
+	return m.GetClient(config)
 }
 
 // getFingerprint generates a unique string representation of the client configuration.

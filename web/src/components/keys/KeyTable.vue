@@ -12,6 +12,7 @@ import {
   CopyOutline,
   EyeOffOutline,
   EyeOutline,
+  FlashOutline,
   RemoveCircleOutline,
   Search,
 } from "@vicons/ionicons5";
@@ -28,6 +29,8 @@ import {
   type MessageReactive,
 } from "naive-ui";
 import { h, ref, watch } from "vue";
+import BatchValidationDialog from "./BatchValidationDialog.vue";
+import ValidationProgressPanel from "./ValidationProgressPanel.vue";
 import KeyCreateDialog from "./KeyCreateDialog.vue";
 import KeyDeleteDialog from "./KeyDeleteDialog.vue";
 import BatchCheckDialog from "./BatchCheckDialog.vue";
@@ -55,6 +58,9 @@ const confirmInput = ref("");
 
 // 對話框狀態
 const batchCheckDialogShow = ref(false);
+const batchValidationDialogShow = ref(false);
+const validationProgressShow = ref(false);
+const currentValidationJobId = ref("");
 
 // 計算屬性
 const currentGroupId = computed(() => props.selectedGroup?.id);
@@ -91,6 +97,11 @@ const isRestoring = ref(false);
 
 const createDialogShow = ref(false);
 const deleteDialogShow = ref(false);
+
+// 批量驗證相關狀態
+const batchValidationDialogShow = ref(false);
+const validationProgressShow = ref(false);
+const currentValidationJobId = ref("");
 
 watch(
   () => props.selectedGroup,
@@ -579,6 +590,29 @@ function resetPage() {
   searchText.value = "";
   statusFilter.value = "all";
 }
+
+// 批量驗證相關函數
+function openBatchValidationDialog() {
+  if (!props.selectedGroup) {
+    window.$message.error("請先選擇一個分組");
+    return;
+  }
+  batchValidationDialogShow.value = true;
+}
+
+function handleValidationStarted(jobId: string) {
+  currentValidationJobId.value = jobId;
+  validationProgressShow.value = true;
+  batchValidationDialogShow.value = false;
+}
+
+function handleValidationCompleted() {
+  // 驗證完成後刷新密鑰列表
+  loadKeys();
+  if (props.selectedGroup) {
+    triggerSyncOperationRefresh(props.selectedGroup.name, "BATCH_VALIDATION");
+  }
+}
 </script>
 
 <template>
@@ -598,7 +632,13 @@ function resetPage() {
           </template>
           刪除密鑰
         </n-button>
-        <n-button type="primary" size="small" @click="batchCheckDialogShow = true" :disabled="!currentGroupId">
+        <n-button type="primary" size="small" @click="openBatchValidationDialog">
+          <template #icon>
+            <n-icon :component="FlashOutline" />
+          </template>
+          批量驗證
+        </n-button>
+        <n-button type="info" size="small" @click="batchCheckDialogShow = true" :disabled="!currentGroupId">
           <template #icon>
             <n-icon :component="CheckmarkCircleOutline" />
           </template>
@@ -787,6 +827,23 @@ function resetPage() {
       @success="handleBatchDeleteSuccess"
     />
 
+    <!-- 批量驗證對話框 -->
+    <batch-validation-dialog
+      v-model:visible="batchValidationDialogShow"
+      :selected-group="selectedGroup"
+      @validation-started="handleValidationStarted"
+    />
+
+    <!-- 驗證進度面板 -->
+    <validation-progress-panel
+      v-if="validationProgressShow && currentValidationJobId"
+      :job-id="currentValidationJobId"
+      :visible="validationProgressShow"
+      @update:visible="validationProgressShow = false"
+      @job-completed="handleValidationCompleted"
+    />
+
+    <!-- 一鍵檢查對話框 -->
     <batch-check-dialog
       v-if="selectedGroup?.id"
       v-model:visible="batchCheckDialogShow"

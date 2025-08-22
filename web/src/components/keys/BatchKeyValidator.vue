@@ -304,7 +304,8 @@ import {
   NStatistic,
   NSelect,
   NDataTable,
-  useMessage
+  useMessage,
+  type FormRules
 } from 'naive-ui'
 import {
   CheckmarkCircle,
@@ -402,11 +403,39 @@ const filterOptions = [
   { label: '無效', value: 'invalid' }
 ]
 
-const configRules = {
-  concurrency: { required: true, type: 'number', min: 1, max: 200 },
-  timeoutSeconds: { required: true, type: 'number', min: 5, max: 120 },
-  maxRetries: { required: true, type: 'number', min: 0, max: 10 },
-  rateLimitPerSec: { required: true, type: 'number', min: 1, max: 500 }
+const configRules: FormRules = {
+  concurrency: {
+    required: true,
+    type: 'number',
+    min: 1,
+    max: 200,
+    message: '並發數必須在 1-200 之間',
+    trigger: ['blur', 'change']
+  },
+  timeoutSeconds: {
+    required: true,
+    type: 'number',
+    min: 5,
+    max: 120,
+    message: '超時時間必須在 5-120 秒之間',
+    trigger: ['blur', 'change']
+  },
+  maxRetries: {
+    required: true,
+    type: 'number',
+    min: 0,
+    max: 10,
+    message: '重試次數必須在 0-10 次之間',
+    trigger: ['blur', 'change']
+  },
+  rateLimitPerSec: {
+    required: true,
+    type: 'number',
+    min: 1,
+    max: 500,
+    message: '速率限制必須在 1-500 之間',
+    trigger: ['blur', 'change']
+  }
 }
 
 const resultPagination = {

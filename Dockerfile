@@ -1,7 +1,6 @@
 # Stage 1: Build frontend
 FROM node:20-alpine AS frontend-builder
 
-ARG VERSION=1.1.0
 WORKDIR /build
 
 # Copy package files first for better caching
@@ -13,7 +12,8 @@ RUN npm ci --silent
 # Copy source code
 COPY web/ ./
 
-# Build frontend
+# Build frontend with version argument
+ARG VERSION=1.1.0
 RUN VITE_VERSION=${VERSION} npm run build
 
 # Stage 2: Build backend
@@ -42,6 +42,7 @@ COPY . .
 COPY --from=frontend-builder /build/dist ./web/dist
 
 # Build the Go application with optimizations
+ARG VERSION=1.1.0
 RUN go build \
     -ldflags "-s -w -X gpt-load/internal/version.Version=${VERSION}" \
     -trimpath \

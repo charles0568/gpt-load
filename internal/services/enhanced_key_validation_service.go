@@ -4,14 +4,12 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"gpt-load/internal/channel"
 	"gpt-load/internal/models"
-	"gpt-load/internal/types"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"

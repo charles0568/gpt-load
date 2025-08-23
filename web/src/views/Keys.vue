@@ -7,7 +7,7 @@ import BatchKeyValidator from "@/components/keys/BatchKeyValidator.vue";
 import type { Group } from "@/types/models";
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { NTabs, NTab, NEmpty } from "naive-ui";
+import { NTabs, NTabPane, NEmpty } from "naive-ui";
 
 const groups = ref<Group[]>([]);
 const loading = ref(false);
@@ -143,13 +143,13 @@ async function handleGroupCopySuccess(newGroup: Group) {
       <!-- 主要內容區域使用選項卡 -->
       <div class="content-tabs">
         <n-tabs v-model:value="activeTab" type="line" animated>
-          <n-tab name="keys" tab="🔑 密鑰管理">
+          <n-tab-pane name="keys" tab="🔑 密鑰管理">
             <div class="key-table-section">
               <key-table :selected-group="selectedGroup" />
             </div>
-          </n-tab>
+          </n-tab-pane>
 
-          <n-tab name="batch-validation" tab="⚡ 批量驗證" :disabled="!selectedGroup">
+          <n-tab-pane name="batch-validation" tab="⚡ 批量驗證" :disabled="!selectedGroup">
             <div class="batch-validation-section" v-if="selectedGroup">
               <batch-key-validator
                 :group-id="selectedGroup.id!"
@@ -159,7 +159,7 @@ async function handleGroupCopySuccess(newGroup: Group) {
             <div v-else class="empty-state">
               <n-empty description="請先選擇一個分組" />
             </div>
-          </n-tab>
+          </n-tab-pane>
         </n-tabs>
       </div>
     </div>

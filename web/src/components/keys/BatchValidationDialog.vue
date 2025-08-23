@@ -385,13 +385,18 @@ async function startValidation() {
   justify-content: center !important;
 }
 
+/* 完全隱藏遮罩層 */
 .batch-validation-dialog :deep(.n-modal-mask) {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 9998 !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* 全局隱藏所有模態框遮罩層 */
+:global(.n-modal-mask) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
 .batch-validation-dialog :deep(.n-modal-container) {

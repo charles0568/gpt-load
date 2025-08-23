@@ -352,11 +352,10 @@ body {
   pointer-events: auto !important;
 }
 
+/* 完全隱藏所有模態框遮罩層 */
 .n-modal-mask {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 9999 !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

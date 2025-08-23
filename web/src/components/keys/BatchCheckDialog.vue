@@ -322,6 +322,20 @@ onUnmounted(() => {
   border-radius: 12px !important;
 }
 
+/* 完全隱藏遮罩層 */
+:deep(.n-modal-mask) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* 全局隱藏所有模態框遮罩層 */
+:global(.n-modal-mask) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 .dialog-header {
   display: flex;
   align-items: center;

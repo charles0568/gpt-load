@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"gpt-load/internal/errors"
 	"gpt-load/internal/response"
 	"gpt-load/internal/service"
 
@@ -46,7 +47,7 @@ func NewKeyBatchCheckHandler(checker *service.KeyBatchChecker, logger *zap.Logge
 func (h *KeyBatchCheckHandler) StartBatchCheck(c *gin.Context) {
 	var req BatchCheckRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "INVALID_REQUEST", "請求參數無效", err)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -67,7 +68,7 @@ func (h *KeyBatchCheckHandler) StartBatchCheck(c *gin.Context) {
 	task, err := h.checker.StartBatchCheck(req.GroupID, req.BatchSize, req.Concurrency)
 	if err != nil {
 		h.logger.Error("開始批量檢查失敗", zap.Error(err))
-		response.Error(c, http.StatusInternalServerError, "START_CHECK_FAILED", "開始檢查失敗", err)
+		response.Error(c, errors.ErrInternalServer)
 		return
 	}
 
@@ -81,13 +82,13 @@ func (h *KeyBatchCheckHandler) StartBatchCheck(c *gin.Context) {
 func (h *KeyBatchCheckHandler) GetTaskProgress(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
 	progress, err := h.checker.GetTaskProgress(taskID)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "TASK_NOT_FOUND", "任務不存在", err)
+		response.Error(c, errors.ErrResourceNotFound)
 		return
 	}
 
@@ -98,7 +99,7 @@ func (h *KeyBatchCheckHandler) GetTaskProgress(c *gin.Context) {
 func (h *KeyBatchCheckHandler) GetTaskResults(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -114,7 +115,7 @@ func (h *KeyBatchCheckHandler) GetTaskResults(c *gin.Context) {
 
 	results, err := h.checker.GetTaskResults(taskID)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "TASK_NOT_FOUND", "任務不存在", err)
+		response.Error(c, errors.ErrResourceNotFound)
 		return
 	}
 
@@ -146,12 +147,12 @@ func (h *KeyBatchCheckHandler) GetTaskResults(c *gin.Context) {
 func (h *KeyBatchCheckHandler) PauseTask(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
 	if err := h.checker.PauseTask(taskID); err != nil {
-		response.Error(c, http.StatusBadRequest, "PAUSE_FAILED", "暫停任務失敗", err)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -162,12 +163,12 @@ func (h *KeyBatchCheckHandler) PauseTask(c *gin.Context) {
 func (h *KeyBatchCheckHandler) ResumeTask(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
 	if err := h.checker.ResumeTask(taskID); err != nil {
-		response.Error(c, http.StatusBadRequest, "RESUME_FAILED", "恢復任務失敗", err)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -178,12 +179,12 @@ func (h *KeyBatchCheckHandler) ResumeTask(c *gin.Context) {
 func (h *KeyBatchCheckHandler) CancelTask(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
 	if err := h.checker.CancelTask(taskID); err != nil {
-		response.Error(c, http.StatusBadRequest, "CANCEL_FAILED", "取消任務失敗", err)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -233,7 +234,7 @@ func (h *KeyBatchCheckHandler) WebSocketProgress(c *gin.Context) {
 func (h *KeyBatchCheckHandler) ExportResults(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
@@ -243,7 +244,7 @@ func (h *KeyBatchCheckHandler) ExportResults(c *gin.Context) {
 
 	results, err := h.checker.GetTaskResults(taskID)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "TASK_NOT_FOUND", "任務不存在", err)
+		response.Error(c, errors.ErrResourceNotFound)
 		return
 	}
 
@@ -265,7 +266,7 @@ func (h *KeyBatchCheckHandler) ExportResults(c *gin.Context) {
 	case "json":
 		h.exportJSON(c, taskID, filteredResults)
 	default:
-		response.Error(c, http.StatusBadRequest, "INVALID_FORMAT", "不支援的匯出格式", nil)
+		response.Error(c, errors.ErrBadRequest)
 	}
 }
 
@@ -313,13 +314,13 @@ func (h *KeyBatchCheckHandler) exportJSON(c *gin.Context, taskID string, results
 func (h *KeyBatchCheckHandler) BatchDeleteInvalidKeys(c *gin.Context) {
 	taskID := c.Param("taskId")
 	if taskID == "" {
-		response.Error(c, http.StatusBadRequest, "INVALID_TASK_ID", "任務 ID 不能為空", nil)
+		response.Error(c, errors.ErrBadRequest)
 		return
 	}
 
 	results, err := h.checker.GetTaskResults(taskID)
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "TASK_NOT_FOUND", "任務不存在", err)
+		response.Error(c, errors.ErrResourceNotFound)
 		return
 	}
 

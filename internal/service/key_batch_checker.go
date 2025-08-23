@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gpt-load/internal/model"
+	"gpt-load/internal/models"
 	"gpt-load/internal/types"
 	"net/http"
 	"sync"
@@ -86,7 +86,7 @@ func (c *KeyBatchChecker) StartBatchCheck(groupID uint, batchSize int, concurren
 	taskID := fmt.Sprintf("batch_check_%d_%d", groupID, time.Now().Unix())
 
 	// 獲取要檢查的密鑰
-	var keys []model.Key
+	var keys []models.APIKey
 	query := c.db.Where("group_id = ?", groupID)
 	if err := query.Find(&keys).Error; err != nil {
 		return nil, fmt.Errorf("獲取密鑰列表失敗: %w", err)
@@ -129,7 +129,7 @@ func (c *KeyBatchChecker) StartBatchCheck(groupID uint, batchSize int, concurren
 }
 
 // runBatchCheck 執行批量檢查
-func (c *KeyBatchChecker) runBatchCheck(ctx context.Context, task *BatchCheckTask, keys []model.Key, batchSize int, concurrency int) {
+func (c *KeyBatchChecker) runBatchCheck(ctx context.Context, task *BatchCheckTask, keys []models.APIKey, batchSize int, concurrency int) {
 	defer func() {
 		task.mu.Lock()
 		if task.Progress.Status == "running" {
@@ -191,14 +191,14 @@ func (c *KeyBatchChecker) runBatchCheck(ctx context.Context, task *BatchCheckTas
 }
 
 // checkBatch 檢查單個批次
-func (c *KeyBatchChecker) checkBatch(ctx context.Context, task *BatchCheckTask, keys []model.Key, concurrency int) {
+func (c *KeyBatchChecker) checkBatch(ctx context.Context, task *BatchCheckTask, keys []models.APIKey, concurrency int) {
 	semaphore := make(chan struct{}, concurrency)
 	var wg sync.WaitGroup
 	var processed int64
 
 	for _, key := range keys {
 		wg.Add(1)
-		go func(k model.Key) {
+		go func(k models.APIKey) {
 			defer wg.Done()
 
 			// 獲取信號量
@@ -233,24 +233,24 @@ func (c *KeyBatchChecker) checkBatch(ctx context.Context, task *BatchCheckTask, 
 }
 
 // checkSingleKey 檢查單個密鑰
-func (c *KeyBatchChecker) checkSingleKey(ctx context.Context, key model.Key) BatchCheckResult {
+func (c *KeyBatchChecker) checkSingleKey(ctx context.Context, key models.APIKey) BatchCheckResult {
 	startTime := time.Now()
 	result := BatchCheckResult{
 		KeyID:     key.ID,
-		Key:       key.Key,
+		Key:       key.KeyValue,
 		GroupID:   key.GroupID,
 		CheckedAt: startTime,
 	}
 
 	// 根據分組類型選擇檢查方法
-	var group model.Group
+	var group models.Group
 	if err := c.db.First(&group, key.GroupID).Error; err != nil {
 		result.ErrorMessage = "獲取分組資訊失敗"
 		return result
 	}
 
 	// 執行實際的 API 檢查
-	valid, responseTime, errMsg := c.performAPICheck(ctx, key.Key, group)
+	valid, responseTime, errMsg := c.performAPICheck(ctx, key.KeyValue, group)
 
 	result.Valid = valid
 	result.ResponseTime = responseTime
@@ -275,7 +275,7 @@ func (c *KeyBatchChecker) checkSingleKey(ctx context.Context, key model.Key) Bat
 }
 
 // performAPICheck 執行實際的 API 檢查
-func (c *KeyBatchChecker) performAPICheck(ctx context.Context, apiKey string, group model.Group) (bool, int64, string) {
+func (c *KeyBatchChecker) performAPICheck(ctx context.Context, apiKey string, group models.Group) (bool, int64, string) {
 	startTime := time.Now()
 
 	// 根據分組類型構建測試請求
@@ -283,9 +283,12 @@ func (c *KeyBatchChecker) performAPICheck(ctx context.Context, apiKey string, gr
 	var testPayload map[string]interface{}
 	var headers map[string]string
 
-	switch group.Type {
+	switch group.ChannelType {
 	case "gemini":
-		testURL = fmt.Sprintf("%s/v1beta/models/gemini-pro:generateContent", group.BaseURL)
+		testURL = group.ValidationEndpoint
+		if testURL == "" {
+			testURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+		}
 		testPayload = map[string]interface{}{
 			"contents": []map[string]interface{}{
 				{
@@ -300,7 +303,10 @@ func (c *KeyBatchChecker) performAPICheck(ctx context.Context, apiKey string, gr
 			"x-goog-api-key": apiKey,
 		}
 	case "openai":
-		testURL = fmt.Sprintf("%s/v1/chat/completions", group.BaseURL)
+		testURL = group.ValidationEndpoint
+		if testURL == "" {
+			testURL = "https://api.openai.com/v1/chat/completions"
+		}
 		testPayload = map[string]interface{}{
 			"model": "gpt-3.5-turbo",
 			"messages": []map[string]interface{}{

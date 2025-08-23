@@ -172,6 +172,8 @@ async function handleGroupCopySuccess(newGroup: Group) {
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -184,6 +186,8 @@ async function handleGroupCopySuccess(newGroup: Group) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .group-info {
@@ -208,6 +212,8 @@ async function handleGroupCopySuccess(newGroup: Group) {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .empty-state {

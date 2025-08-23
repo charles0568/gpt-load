@@ -86,11 +86,11 @@ const throughputPerMinute = computed(() => {
 
 const estimatedTimeRemaining = computed(() => {
   if (!job.value?.stats || throughputPerMinute.value === 0) return "計算中...";
-  
+
   const { processed_keys, total_keys } = job.value.stats;
   const remaining = total_keys - processed_keys;
   const remainingMinutes = remaining / (throughputPerMinute.value / 60);
-  
+
   if (remainingMinutes < 1) {
     return "不到 1 分鐘";
   } else if (remainingMinutes < 60) {
@@ -131,8 +131,8 @@ const resultColumns: DataTableColumns<ValidationResult> = [
     },
     render: (row) => {
       const keyValue = row.key?.key_value || "";
-      return keyValue.length > 20 ? 
-        `${keyValue.substring(0, 20)}...` : 
+      return keyValue.length > 20 ?
+        `${keyValue.substring(0, 20)}...` :
         keyValue;
     }
   },
@@ -170,11 +170,11 @@ async function fetchJobStatus() {
   try {
     const response = await keysApi.getValidationStatus(props.jobId);
     job.value = response;
-    
+
     if (response.status === "completed" || response.status === "failed" || response.status === "cancelled") {
       stopAutoRefresh();
       emit("job-completed", response);
-      
+
       if (response.status === "completed") {
         message.success("批量驗證已完成！");
       } else if (response.status === "failed") {
@@ -244,24 +244,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <n-card 
-    v-if="visible" 
-    title="批量驗證進度" 
+  <n-card
+    v-if="visible"
+    title="批量驗證進度"
     class="validation-progress-panel"
     :bordered="false"
     size="small"
   >
     <template #header-extra>
       <n-space>
-        <n-button 
-          size="small" 
+        <n-button
+          size="small"
           :type="autoRefresh ? 'primary' : 'default'"
           @click="toggleAutoRefresh"
         >
           {{ autoRefresh ? "停止自動刷新" : "開始自動刷新" }}
         </n-button>
-        <n-button 
-          size="small" 
+        <n-button
+          size="small"
           @click="handleClose"
         >
           關閉
@@ -278,8 +278,8 @@ onUnmounted(() => {
               <component :is="statusIcon" />
             </n-icon>
             <n-tag :type="statusColor" size="large">
-              {{ job.status === 'running' ? '進行中' : 
-                 job.status === 'completed' ? '已完成' : 
+              {{ job.status === 'running' ? '進行中' :
+                 job.status === 'completed' ? '已完成' :
                  job.status === 'failed' ? '失敗' : '已取消' }}
             </n-tag>
             <n-text depth="2">任務 ID: {{ job.id }}</n-text>
@@ -309,9 +309,9 @@ onUnmounted(() => {
             <n-text>{{ estimatedTimeRemaining }}</n-text>
           </n-statistic>
           <n-statistic label="已用時間">
-            <n-time 
-              :time="new Date(job.stats.start_time)" 
-              :to="new Date()" 
+            <n-time
+              :time="new Date(job.stats.start_time)"
+              :to="new Date()"
               type="relative"
             />
           </n-statistic>
@@ -333,7 +333,7 @@ onUnmounted(() => {
         <n-card title="驗證結果" size="small" v-if="job.results && job.results.length > 0">
           <n-data-table
             :columns="resultColumns"
-            :data="job.results.slice(-20)" 
+            :data="job.results.slice(-20)"
             size="small"
             :max-height="300"
             :scroll-x="600"
@@ -352,6 +352,9 @@ onUnmounted(() => {
   margin: 16px 0;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .validation-progress-panel :deep(.n-progress-line) {

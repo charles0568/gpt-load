@@ -610,6 +610,8 @@ function resetPage() {
 <style scoped>
 .group-info-container {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 :deep(.n-card-header) {

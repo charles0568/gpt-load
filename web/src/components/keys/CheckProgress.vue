@@ -274,8 +274,9 @@ const handleCancel = () => {
 <style scoped>
 .check-progress {
   padding: 24px;
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .status-header {

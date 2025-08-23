@@ -40,7 +40,8 @@ async function pollOnce() {
   try {
     const task = await keysApi.getTaskStatus();
     taskInfo.value = task;
-    visible.value = task.is_running;
+    // 只有當任務真正在運行且有有效數據時才顯示
+    visible.value = task.is_running && task.task_type && (task.total_keys > 0 || task.processed_keys > 0);
     if (!task.is_running) {
       stopPolling();
       if (task.result) {
@@ -108,6 +109,10 @@ function getProgressText(): string {
 
 function handleClose() {
   visible.value = false;
+  stopPolling(); // 停止輪詢
+  if (taskInfo.value.finished_at) {
+    localStorage.setItem("last_closed_task", taskInfo.value.finished_at);
+  }
 }
 
 function getTaskTitle(): string {
@@ -126,7 +131,7 @@ function getTaskTitle(): string {
 </script>
 
 <template>
-  <n-card v-if="visible" class="global-task-progress" :bordered="false" size="small">
+  <n-card v-if="visible && taskInfo.is_running && taskInfo.task_type" class="global-task-progress" :bordered="false" size="small">
     <div class="progress-container">
       <div class="progress-header">
         <div class="progress-info">
@@ -168,10 +173,10 @@ function getTaskTitle(): string {
 .global-task-progress {
   position: fixed;
   bottom: 62px;
-  right: 10px;
+  right: 20px;
   z-index: 9999;
-  width: 95%;
-  max-width: 350px;
+  width: 320px;
+  max-width: 320px;
   background: white;
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-lg);

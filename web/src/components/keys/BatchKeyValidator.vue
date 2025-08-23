@@ -759,6 +759,9 @@ watch(() => props.keys, (newKeys) => {
 <style scoped>
 .batch-validation-container {
   padding: 16px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .valid-key-row {

@@ -78,29 +78,29 @@ const selectedScope = ref("all");
 
 // Performance presets
 const presetOptions = [
-  { 
-    label: "平衡模式", 
+  {
+    label: "平衡模式",
     value: "balanced",
     concurrency: 30,
     timeout: 15,
     rate_limit: 60
   },
-  { 
-    label: "高速模式", 
+  {
+    label: "高速模式",
     value: "fast",
     concurrency: 50,
     timeout: 10,
     rate_limit: 100
   },
-  { 
-    label: "保守模式", 
+  {
+    label: "保守模式",
     value: "conservative",
     concurrency: 20,
     timeout: 30,
     rate_limit: 30
   },
-  { 
-    label: "極速模式", 
+  {
+    label: "極速模式",
     value: "extreme",
     concurrency: 80,
     timeout: 8,
@@ -113,7 +113,7 @@ const estimatedTime = computed(() => {
   const keyCount = props.selectedGroup.total_keys ?? 0;
   const timePerKey = config.timeout_seconds + 2; // Add some overhead
   const parallelTime = Math.ceil(keyCount / config.concurrency) * timePerKey;
-  
+
   if (parallelTime < 60) {
     return `約 ${parallelTime} 秒`;
   } else if (parallelTime < 3600) {
@@ -156,11 +156,11 @@ async function startValidation() {
     };
 
     const response = await keysApi.startBatchValidation(request);
-    
+
     message.success("批量驗證已開始！");
     emit("validation-started", response.id);
     handleClose();
-    
+
   } catch (error: any) {
     console.error("Failed to start batch validation:", error);
     message.error(error.response?.data?.message || "啟動批量驗證失敗");
@@ -175,7 +175,7 @@ async function startValidation() {
     :show="visible"
     title="批量密鑰驗證"
     class="batch-validation-dialog"
-    style="width: 800px; max-width: 90vw"
+    style="width: 1200px; max-width: 95vw; max-height: 90vh"
     @update:show="handleClose"
   >
     <n-card>
@@ -363,8 +363,20 @@ async function startValidation() {
   overflow-y: auto;
 }
 
+.batch-validation-dialog :deep(.n-dialog__content) {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 .batch-validation-dialog :deep(.n-card) {
   border-radius: 12px;
+  max-height: none;
+}
+
+.batch-validation-dialog :deep(.n-card__content) {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 20px;
 }
 
 .batch-validation-dialog :deep(.n-form-item-label) {
@@ -390,12 +402,12 @@ async function startValidation() {
     width: 95vw !important;
     max-width: none !important;
   }
-  
+
   /* 在小屏幕上使用單列佈局 */
   div[style*="grid-template-columns: 1fr 1fr"] {
     display: block !important;
   }
-  
+
   div[style*="grid-template-columns: 1fr 1fr 1fr"] {
     display: block !important;
   }

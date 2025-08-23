@@ -41,7 +41,7 @@ async function pollOnce() {
     const task = await keysApi.getTaskStatus();
     taskInfo.value = task;
     // 只有當任務真正在運行且有有效數據時才顯示
-    visible.value = task.is_running && task.task_type && (task.total_keys > 0 || task.processed_keys > 0);
+    visible.value = task.is_running && task.task_type && ((task.total || 0) > 0 || (task.processed || 0) > 0);
     if (!task.is_running) {
       stopPolling();
       if (task.result) {

@@ -17,7 +17,7 @@ import {
   useMessage,
   type FormInst,
 } from "naive-ui";
-import { FlashOutline, SettingsOutline, PlayOutline } from "@vicons/ionicons5";
+import { FlashOutline, SettingsOutline, PlayOutline, CloseOutline } from "@vicons/ionicons5";
 import { ref, reactive, computed } from "vue";
 
 interface Props {
@@ -174,23 +174,30 @@ async function startValidation() {
   <n-modal
     :show="props.visible"
     @update:show="(value: boolean) => emit('update:visible', value)"
-    preset="dialog"
     title="批量密鑰驗證"
     class="batch-validation-dialog"
     style="width: 1400px; max-width: 98vw; height: 90vh; max-height: 90vh"
     :teleport="true"
     :z-index="9999"
-    :mask-closable="false"
+    :mask-closable="true"
     :close-on-esc="true"
     transform-origin="center"
+    @mask-click="handleClose"
   >
     <n-card>
       <template #header>
-        <n-space align="center">
-          <n-icon size="20" color="var(--primary-color)">
-            <FlashOutline />
-          </n-icon>
-          <span>高效能批量驗證</span>
+        <n-space align="center" justify="space-between">
+          <n-space align="center">
+            <n-icon size="20" color="var(--primary-color)">
+              <FlashOutline />
+            </n-icon>
+            <span>高效能批量驗證</span>
+          </n-space>
+          <n-button quaternary circle @click="handleClose">
+            <template #icon>
+              <n-icon><CloseOutline /></n-icon>
+            </template>
+          </n-button>
         </n-space>
       </template>
 

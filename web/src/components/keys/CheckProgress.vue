@@ -129,7 +129,13 @@
     </div>
 
     <!-- 取消確認對話框 -->
-    <n-modal v-model:show="showCancelDialog" preset="dialog" title="確認取消">
+    <n-modal
+      v-model:show="showCancelDialog"
+      preset="dialog"
+      title="確認取消"
+      :mask-closable="true"
+      :close-on-esc="true"
+    >
       <p>確定要取消當前的批量檢查嗎？</p>
       <p class="text-warning">已檢查的結果將會保留，但未完成的檢查將停止。</p>
       <template #action>

@@ -151,6 +151,8 @@ function handleInput(value: string) {
       positive-text="确认生成"
       negative-text="取消"
       :positive-button-props="{ loading: isGenerating }"
+      :mask-closable="true"
+      :close-on-esc="true"
       @positive-click="confirmGenerateKeys"
     >
       <n-space vertical :size="16">

@@ -1,9 +1,24 @@
 <template>
-  <n-modal :show="props.visible" @update:show="(value: boolean) => emit('update:visible', value)" preset="dialog" title="批量檢查密鑰" style="width: 900px; max-width: 95vw">
+  <n-modal
+    :show="props.visible"
+    @update:show="(value: boolean) => emit('update:visible', value)"
+    title="批量檢查密鑰"
+    style="width: 900px; max-width: 95vw"
+    :mask-closable="true"
+    :close-on-esc="true"
+    @mask-click="closeDialog"
+  >
     <template #header>
       <div class="dialog-header">
-        <n-icon :component="CheckmarkCircleOutline" size="24" />
-        <span>批量檢查密鑰</span>
+        <n-space align="center">
+          <n-icon :component="CheckmarkCircleOutline" size="24" />
+          <span>批量檢查密鑰</span>
+        </n-space>
+        <n-button quaternary circle @click="closeDialog">
+          <template #icon>
+            <n-icon><CloseOutline /></n-icon>
+          </template>
+        </n-button>
       </div>
     </template>
 
@@ -123,7 +138,8 @@ import { useMessage } from 'naive-ui'
 import {
   CheckmarkCircleOutline,
   InformationCircleOutline,
-  PlayOutline
+  PlayOutline,
+  CloseOutline
 } from '@vicons/ionicons5'
 import CheckProgress from './CheckProgress.vue'
 import CheckResults from './CheckResults.vue'
@@ -302,7 +318,8 @@ onUnmounted(() => {
 .dialog-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
   font-weight: 600;
 }
 

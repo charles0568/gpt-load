@@ -128,7 +128,13 @@
     </div>
 
     <!-- 刪除確認對話框 -->
-    <n-modal v-model:show="showDeleteDialog" preset="dialog" title="確認刪除">
+    <n-modal
+      v-model:show="showDeleteDialog"
+      preset="dialog"
+      title="確認刪除"
+      :mask-closable="true"
+      :close-on-esc="true"
+    >
       <p>確定要刪除所有無效密鑰嗎？</p>
       <p class="text-warning">
         此操作將永久刪除 {{ progress?.invalid_keys || 0 }} 個無效密鑰，無法復原。

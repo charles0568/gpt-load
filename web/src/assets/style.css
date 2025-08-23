@@ -333,3 +333,30 @@ body {
 .n-layout-scroll-container {
   overflow: hidden;
 }
+
+/* 確保對話框能夠正確顯示在最上層 */
+.n-modal-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.n-modal-container > * {
+  pointer-events: auto !important;
+}
+
+.n-modal-mask {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+}

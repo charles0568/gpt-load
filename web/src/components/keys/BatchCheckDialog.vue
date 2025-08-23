@@ -1,5 +1,5 @@
 <template>
-  <n-modal v-model:show="visible" preset="dialog" title="批量檢查密鑰" style="width: 900px; max-width: 95vw">
+  <n-modal :show="props.visible" @update:show="(value: boolean) => emit('update:visible', value)" preset="dialog" title="批量檢查密鑰" style="width: 900px; max-width: 95vw">
     <template #header>
       <div class="dialog-header">
         <n-icon :component="CheckmarkCircleOutline" size="24" />

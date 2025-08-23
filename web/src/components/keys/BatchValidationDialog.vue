@@ -4,7 +4,7 @@ import { keysApi } from "@/api/keys";
 import {
   NButton,
   NCard,
-  NDialog,
+  NModal,
   NForm,
   NFormItem,
   NIcon,
@@ -171,12 +171,18 @@ async function startValidation() {
 </script>
 
 <template>
-  <n-dialog
-    :show="visible"
+  <n-modal
+    :show="props.visible"
+    @update:show="(value: boolean) => emit('update:visible', value)"
+    preset="dialog"
     title="批量密鑰驗證"
     class="batch-validation-dialog"
-    style="width: 1200px; max-width: 95vw; max-height: 90vh"
-    @update:show="handleClose"
+    style="width: 1400px; max-width: 98vw; height: 90vh; max-height: 90vh"
+    :teleport="true"
+    :z-index="9999"
+    :mask-closable="false"
+    :close-on-esc="true"
+    transform-origin="center"
   >
     <n-card>
       <template #header>
@@ -354,29 +360,76 @@ async function startValidation() {
         </n-space>
       </template>
     </n-card>
-  </n-dialog>
+  </n-modal>
 </template>
 
 <style scoped>
-.batch-validation-dialog :deep(.n-dialog) {
-  max-height: 90vh;
-  overflow-y: auto;
+/* 確保對話框覆蓋整個視窗 */
+.batch-validation-dialog :deep(.n-modal) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.batch-validation-dialog :deep(.n-dialog__content) {
-  max-height: 80vh;
-  overflow-y: auto;
+.batch-validation-dialog :deep(.n-modal-mask) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9998 !important;
+}
+
+.batch-validation-dialog :deep(.n-modal-container) {
+  position: relative !important;
+  z-index: 10000 !important;
+  width: 1400px !important;
+  max-width: 98vw !important;
+  height: 90vh !important;
+  max-height: 90vh !important;
+}
+
+.batch-validation-dialog :deep(.n-modal__content) {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 12px !important;
 }
 
 .batch-validation-dialog :deep(.n-card) {
-  border-radius: 12px;
-  max-height: none;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.batch-validation-dialog :deep(.n-card__header) {
+  flex-shrink: 0 !important;
+  padding: 20px 20px 16px 20px !important;
+  border-bottom: 1px solid var(--n-border-color) !important;
 }
 
 .batch-validation-dialog :deep(.n-card__content) {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 20px;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 20px !important;
+  min-height: 0 !important;
+}
+
+.batch-validation-dialog :deep(.n-card__footer) {
+  flex-shrink: 0 !important;
+  border-top: 1px solid var(--n-border-color) !important;
+  padding: 16px 20px !important;
+  background: var(--n-color) !important;
 }
 
 .batch-validation-dialog :deep(.n-form-item-label) {
@@ -398,9 +451,11 @@ async function startValidation() {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-  .batch-validation-dialog :deep(.n-dialog) {
-    width: 95vw !important;
+  .batch-validation-dialog :deep(.n-modal-container) {
+    width: 98vw !important;
     max-width: none !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
   }
 
   /* 在小屏幕上使用單列佈局 */
@@ -411,5 +466,15 @@ async function startValidation() {
   div[style*="grid-template-columns: 1fr 1fr 1fr"] {
     display: block !important;
   }
+}
+
+/* 確保對話框在所有情況下都能正確顯示 */
+:global(.n-modal-container) {
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+:global(.n-modal-mask) {
+  z-index: 9998 !important;
 }
 </style>

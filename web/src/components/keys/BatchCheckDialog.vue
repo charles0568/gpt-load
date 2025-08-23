@@ -2,28 +2,28 @@
   <n-modal
     :show="props.visible"
     @update:show="(value: boolean) => emit('update:visible', value)"
-    title="批量檢查密鑰"
     style="width: 900px; max-width: 95vw"
     :mask-closable="true"
     :close-on-esc="true"
     :show-mask="false"
     @mask-click="closeDialog"
   >
-    <template #header>
-      <div class="dialog-header">
-        <n-space align="center">
-          <n-icon :component="CheckmarkCircleOutline" size="24" />
-          <span>批量檢查密鑰</span>
-        </n-space>
-        <n-button quaternary circle @click="closeDialog">
-          <template #icon>
-            <n-icon><CloseOutline /></n-icon>
-          </template>
-        </n-button>
-      </div>
-    </template>
+    <n-card>
+      <template #header>
+        <div class="dialog-header">
+          <n-space align="center">
+            <n-icon :component="CheckmarkCircleOutline" size="24" />
+            <span>批量檢查密鑰</span>
+          </n-space>
+          <n-button quaternary circle @click="closeDialog">
+            <template #icon>
+              <n-icon><CloseOutline /></n-icon>
+            </template>
+          </n-button>
+        </div>
+      </template>
 
-    <div class="batch-check-content">
+      <div class="batch-check-content">
       <!-- 配置區域 -->
       <div v-if="!isChecking && !isCompleted" class="config-section">
         <n-space vertical size="large">
@@ -130,6 +130,7 @@
         </n-button>
       </n-space>
     </template>
+    </n-card>
   </n-modal>
 </template>
 

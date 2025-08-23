@@ -127,7 +127,7 @@ import {
 } from '@vicons/ionicons5'
 import CheckProgress from './CheckProgress.vue'
 import CheckResults from './CheckResults.vue'
-import { batchCheckAPI } from '@/api/keys'
+import { batchCheckAPI } from '@/api/batchCheck'
 
 interface Props {
   visible: boolean
@@ -146,7 +146,7 @@ const message = useMessage()
 
 // 表單數據
 const formData = ref({
-  groupId: props.groupId || null,
+  groupId: props.groupId || 0,
   batchSize: 200,
   concurrency: 50
 })
@@ -154,15 +154,15 @@ const formData = ref({
 // 狀態管理
 const startLoading = ref(false)
 const currentTaskId = ref('')
-const progress = ref(null)
+const progress = ref<any>(null)
 const wsConnection = ref<WebSocket | null>(null)
 
 // 計算屬性
 const groupOptions = computed(() => props.groups)
-const isChecking = computed(() => 
+const isChecking = computed(() =>
   progress.value && ['running', 'paused'].includes(progress.value.status)
 )
-const isCompleted = computed(() => 
+const isCompleted = computed(() =>
   progress.value && ['completed', 'cancelled'].includes(progress.value.status)
 )
 
@@ -177,7 +177,7 @@ watch(() => props.groupId, (newVal) => {
 const startBatchCheck = async () => {
   try {
     startLoading.value = true
-    
+
     const response = await batchCheckAPI.start({
       group_id: formData.value.groupId,
       batch_size: formData.value.batchSize,
@@ -185,13 +185,13 @@ const startBatchCheck = async () => {
     })
 
     currentTaskId.value = response.data.task_id
-    
+
     // 建立 WebSocket 連接
     connectWebSocket()
-    
+
     message.success('批量檢查已開始')
   } catch (error) {
-    message.error('開始檢查失敗：' + error.message)
+    message.error('開始檢查失敗：' + (error instanceof Error ? error.message : String(error)))
   } finally {
     startLoading.value = false
   }
@@ -203,9 +203,9 @@ const connectWebSocket = () => {
 
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const wsUrl = `${protocol}//${window.location.host}/api/keys/batch-check/${currentTaskId.value}/ws`
-  
+
   wsConnection.value = new WebSocket(wsUrl)
-  
+
   wsConnection.value.onmessage = (event) => {
     try {
       progress.value = JSON.parse(event.data)
@@ -213,11 +213,11 @@ const connectWebSocket = () => {
       console.error('解析 WebSocket 訊息失敗:', error)
     }
   }
-  
+
   wsConnection.value.onclose = () => {
     console.log('WebSocket 連接已關閉')
   }
-  
+
   wsConnection.value.onerror = (error) => {
     console.error('WebSocket 錯誤:', error)
     message.error('即時進度連接失敗')
@@ -230,7 +230,7 @@ const pauseCheck = async () => {
     await batchCheckAPI.pause(currentTaskId.value)
     message.success('檢查已暫停')
   } catch (error) {
-    message.error('暫停失敗：' + error.message)
+    message.error('暫停失敗：' + (error instanceof Error ? error.message : String(error)))
   }
 }
 
@@ -240,7 +240,7 @@ const resumeCheck = async () => {
     await batchCheckAPI.resume(currentTaskId.value)
     message.success('檢查已恢復')
   } catch (error) {
-    message.error('恢復失敗：' + error.message)
+    message.error('恢復失敗：' + (error instanceof Error ? error.message : String(error)))
   }
 }
 
@@ -250,7 +250,7 @@ const cancelCheck = async () => {
     await batchCheckAPI.cancel(currentTaskId.value)
     message.success('檢查已取消')
   } catch (error) {
-    message.error('取消失敗：' + error.message)
+    message.error('取消失敗：' + (error instanceof Error ? error.message : String(error)))
   }
 }
 
@@ -274,7 +274,7 @@ const deleteInvalidKeys = async () => {
     message.success(`已刪除 ${response.data.deleted_count} 個無效密鑰`)
     emit('completed')
   } catch (error) {
-    message.error('刪除失敗：' + error.message)
+    message.error('刪除失敗：' + (error instanceof Error ? error.message : String(error)))
   }
 }
 

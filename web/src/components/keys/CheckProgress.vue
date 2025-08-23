@@ -20,7 +20,7 @@
       >
         <template #default="{ percentage }">
           <span class="progress-text">
-            {{ Math.round(percentage) }}% 
+            {{ Math.round(percentage) }}%
             ({{ progress?.processed_keys || 0 }}/{{ progress?.total_keys || 0 }})
           </span>
         </template>
@@ -144,7 +144,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useDialog } from 'naive-ui'
+
 import {
   KeyOutline,
   CheckmarkCircleOutline,
@@ -155,7 +155,6 @@ import {
   StopOutline,
   TimeOutline,
   CheckmarkOutline,
-  WarningOutline,
   CloseOutline
 } from '@vicons/ionicons5'
 
@@ -172,7 +171,7 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
-const dialog = useDialog()
+
 
 const actionLoading = ref(false)
 const showCancelDialog = ref(false)
@@ -242,15 +241,15 @@ const formatTime = (timeStr: string) => {
 // 格式化持續時間
 const formatDuration = (startTime: string) => {
   if (!startTime) return '-'
-  
+
   const start = new Date(startTime)
   const now = new Date()
   const diff = now.getTime() - start.getTime()
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-  
+
   if (hours > 0) {
     return `${hours}時${minutes}分${seconds}秒`
   } else if (minutes > 0) {

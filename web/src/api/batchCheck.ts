@@ -1,4 +1,4 @@
-import { http } from '@/utils/http'
+import http from '@/utils/http'
 
 export interface BatchCheckRequest {
   group_id: number
@@ -102,7 +102,7 @@ export const batchCheckAPI = {
     } else if (filter === 'invalid') {
       params.append('only_invalid', 'true')
     }
-    
+
     const url = `/api/keys/batch-check/${taskId}/export?${params.toString()}`
     window.open(url, '_blank')
   },
@@ -120,9 +120,9 @@ export const batchCheckAPI = {
   createWebSocket(taskId: string, onMessage: (progress: BatchCheckProgress) => void, onError?: (error: Event) => void) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/api/keys/batch-check/${taskId}/ws`
-    
+
     const ws = new WebSocket(wsUrl)
-    
+
     ws.onmessage = (event) => {
       try {
         const progress = JSON.parse(event.data) as BatchCheckProgress
@@ -131,16 +131,16 @@ export const batchCheckAPI = {
         console.error('解析 WebSocket 訊息失敗:', error)
       }
     }
-    
+
     ws.onerror = (error) => {
       console.error('WebSocket 錯誤:', error)
       onError?.(error)
     }
-    
+
     ws.onclose = () => {
       console.log('WebSocket 連接已關閉')
     }
-    
+
     return ws
   }
 }
@@ -171,15 +171,15 @@ export const formatSpeed = (speed: number): string => {
  */
 export const formatDuration = (startTime: string): string => {
   if (!startTime) return '-'
-  
+
   const start = new Date(startTime)
   const now = new Date()
   const diff = now.getTime() - start.getTime()
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-  
+
   if (hours > 0) {
     return `${hours}時${minutes}分${seconds}秒`
   } else if (minutes > 0) {
@@ -194,16 +194,16 @@ export const formatDuration = (startTime: string): string => {
  */
 export const formatEstimatedTime = (estimatedEnd?: string): string => {
   if (!estimatedEnd) return '-'
-  
+
   const end = new Date(estimatedEnd)
   const now = new Date()
   const diff = end.getTime() - now.getTime()
-  
+
   if (diff <= 0) return '即將完成'
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  
+
   if (hours > 0) {
     return `約 ${hours}時${minutes}分後`
   } else if (minutes > 0) {

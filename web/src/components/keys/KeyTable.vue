@@ -28,7 +28,7 @@ import {
   useDialog,
   type MessageReactive,
 } from "naive-ui";
-import { h, ref, watch } from "vue";
+import { h, ref, watch, computed } from "vue";
 import BatchValidationDialog from "./BatchValidationDialog.vue";
 import ValidationProgressPanel from "./ValidationProgressPanel.vue";
 import KeyCreateDialog from "./KeyCreateDialog.vue";
@@ -98,10 +98,7 @@ const isRestoring = ref(false);
 const createDialogShow = ref(false);
 const deleteDialogShow = ref(false);
 
-// 批量驗證相關狀態
-const batchValidationDialogShow = ref(false);
-const validationProgressShow = ref(false);
-const currentValidationJobId = ref("");
+// 批量驗證相關狀態已在上面聲明
 
 watch(
   () => props.selectedGroup,

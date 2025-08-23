@@ -39,7 +39,7 @@
               <div class="chart-label">有效率</div>
             </div>
           </div>
-          
+
           <div class="stats-list">
             <div class="stat-item valid">
               <n-icon :component="CheckmarkCircleOutline" />
@@ -120,7 +120,7 @@
           :data="tableData"
           :loading="tableLoading"
           :pagination="pagination"
-          :row-key="(row) => row.key_id"
+          :row-key="(row: any) => row.key_id"
           size="small"
           striped
         />
@@ -154,10 +154,9 @@ import {
   KeyOutline,
   DownloadOutline,
   SettingsOutline,
-  RefreshOutline,
-  TimeOutline
+  RefreshOutline
 } from '@vicons/ionicons5'
-import { batchCheckAPI } from '@/api/keys'
+import { batchCheckAPI } from '@/api/batchCheck'
 
 interface Props {
   taskId: string
@@ -175,7 +174,7 @@ const emit = defineEmits<Emits>()
 const message = useMessage()
 
 // 狀態管理
-const tableData = ref([])
+const tableData = ref<any[]>([])
 const tableLoading = ref(false)
 const deleteLoading = ref(false)
 const showDeleteDialog = ref(false)
@@ -304,14 +303,14 @@ const tableColumns = [
 const loadResults = async () => {
   try {
     tableLoading.value = true
-    
+
     const response = await batchCheckAPI.getResults(props.taskId, {
       page: pagination.value.page,
       page_size: pagination.value.pageSize
     })
 
     let results = response.data.results || []
-    
+
     // 根據過濾條件篩選
     if (filterStatus.value === 'valid') {
       results = results.filter((item: any) => item.valid)
@@ -322,7 +321,7 @@ const loadResults = async () => {
     tableData.value = results
     pagination.value.itemCount = response.data.pagination?.total || results.length
   } catch (error) {
-    message.error('載入結果失敗：' + error.message)
+    message.error('載入結果失敗：' + (error instanceof Error ? error.message : String(error)))
   } finally {
     tableLoading.value = false
   }

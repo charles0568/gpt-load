@@ -1,0 +1,74 @@
+name: Test Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: web/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd web
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd web
+        npm run build
+
+    - name: Check build output
+      run: |
+        ls -la web/dist/
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Build backend
+      run: |
+        go mod download
+        go build -o gpt-load .
+
+    - name: Check build output
+      run: |
+        ls -la gpt-load
+
+  test-docker:
+    runs-on: ubuntu-latest
+    needs: [test-frontend, test-backend]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image (no push)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64
+        push: false
+        tags: charles0568/gpt-load:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

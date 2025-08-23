@@ -3,23 +3,17 @@ import { keysApi } from "@/api/keys";
 import GroupInfoCard from "@/components/keys/GroupInfoCard.vue";
 import GroupList from "@/components/keys/GroupList.vue";
 import KeyTable from "@/components/keys/KeyTable.vue";
-import BatchKeyValidator from "@/components/keys/BatchKeyValidator.vue";
+
 import type { Group } from "@/types/models";
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { NTabs, NTabPane, NEmpty } from "naive-ui";
+
 
 const groups = ref<Group[]>([]);
 const loading = ref(false);
 const selectedGroup = ref<Group | null>(null);
-const activeTab = ref('keys');
 const router = useRouter();
 const route = useRoute();
-
-// 計算屬性：為批量驗證組件準備密鑰
-const validationKeys = computed(() => {
-  return selectedGroup.value?.api_keys || [];
-});
 
 onMounted(async () => {
   await loadGroups();
@@ -140,27 +134,11 @@ async function handleGroupCopySuccess(newGroup: Group) {
         />
       </div>
 
-      <!-- 主要內容區域使用選項卡 -->
-      <div class="content-tabs">
-        <n-tabs v-model:value="activeTab" type="line" animated>
-          <n-tab-pane name="keys" tab="🔑 密鑰管理">
-            <div class="key-table-section">
-              <key-table :selected-group="selectedGroup" />
-            </div>
-          </n-tab-pane>
-
-          <n-tab-pane name="batch-validation" tab="⚡ 批量驗證" :disabled="!selectedGroup">
-            <div class="batch-validation-section" v-if="selectedGroup">
-              <batch-key-validator
-                :group-id="selectedGroup.id!"
-                :keys="validationKeys"
-              />
-            </div>
-            <div v-else class="empty-state">
-              <n-empty description="請先選擇一個分組" />
-            </div>
-          </n-tab-pane>
-        </n-tabs>
+      <!-- 主要內容區域 -->
+      <div class="content-main">
+        <div class="key-table-section">
+          <key-table :selected-group="selectedGroup" />
+        </div>
       </div>
     </div>
   </div>

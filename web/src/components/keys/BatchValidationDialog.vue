@@ -181,6 +181,7 @@ async function startValidation() {
     :z-index="9999"
     :mask-closable="true"
     :close-on-esc="true"
+    :show-mask="false"
     transform-origin="center"
     @mask-click="handleClose"
   >
@@ -409,6 +410,7 @@ async function startValidation() {
   display: flex !important;
   flex-direction: column !important;
   border-radius: 12px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 .batch-validation-dialog :deep(.n-card) {

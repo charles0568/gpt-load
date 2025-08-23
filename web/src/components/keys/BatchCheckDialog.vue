@@ -6,6 +6,7 @@
     style="width: 900px; max-width: 95vw"
     :mask-closable="true"
     :close-on-esc="true"
+    :show-mask="false"
     @mask-click="closeDialog"
   >
     <template #header>
@@ -315,6 +316,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 對話框陰影效果 */
+:deep(.n-modal__content) {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+}
+
 .dialog-header {
   display: flex;
   align-items: center;

@@ -50,7 +50,7 @@ docker run -d --name gpt-load \
     -p 3001:3001 \
     -e AUTH_KEY=sk-123456 \
     -v "$(pwd)/data":/app/data \
-    ghcr.io/tbphp/gpt-load:latest
+    charles0568/gpt-load:latest
 ```
 
 > 使用 `sk-123456` 登入管理介面：<http://localhost:3001>
@@ -64,8 +64,8 @@ docker run -d --name gpt-load \
 mkdir -p gpt-load && cd gpt-load
 
 # 下載配置檔案
-wget https://raw.githubusercontent.com/tbphp/gpt-load/refs/heads/main/docker-compose.yml
-wget -O .env https://raw.githubusercontent.com/tbphp/gpt-load/refs/heads/main/.env.example
+wget https://raw.githubusercontent.com/charles0568/gpt-load/refs/heads/main/docker-compose.yml
+wget -O .env https://raw.githubusercontent.com/charles0568/gpt-load/refs/heads/main/.env.example
 
 # 啟動服務
 docker compose up -d
@@ -74,6 +74,23 @@ docker compose up -d
 預設安裝的是 SQLite 版本，適合輕量單機應用。
 
 如需安裝 MySQL, PostgreSQL 及 Redis，請在 `docker-compose.yml` 檔案中取消所需服務的註解，並配置好對應的環境配置重啟即可。
+
+### Docker 鏡像標籤說明
+
+**推薦使用 `latest` 標籤**：
+- `charles0568/gpt-load:latest` - 最新穩定版本，包含所有最新功能和修復
+
+**版本歷史**：
+- v1.3.5 - 修復一鍵檢查對話框關閉按鈕問題
+- v1.3.4 - 完全解決遮罩層問題，移除黑色背景覆蓋
+- v1.3.3 - 修復對話框關閉問題
+- v1.3.2 - 添加關閉按鈕功能
+- v1.3.1 - 基礎功能版本
+
+**使用建議**：
+- 生產環境：使用 `charles0568/gpt-load:latest`
+- 開發環境：可以使用本地構建或 `latest` 標籤
+- 如果需要特定版本，可以使用具體的版本標籤，如 `charles0568/gpt-load:v1.3.5`
 
 **其他指令：**
 
